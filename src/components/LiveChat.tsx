@@ -20,71 +20,117 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [clientId] = useState(() => 'client_' + Math.random().toString(36).substr(2, 9));
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [customerName] = useState('Guest User');
+  const [customerEmail] = useState('guest@example.com');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen && !socket) {
-      // Connect to WebSocket
-      const ws = new WebSocket(`ws://localhost:8000/ws/client/${clientId}`);
+    if (isOpen && !socket && !sessionId) {
+      // First create a session
+      fetch('http://localhost:8001/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customer_name: customerName,
+          customer_email: customerEmail
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const newSessionId = data.session_id;
+          setSessionId(newSessionId);
+          
+          // Connect to WebSocket with session ID
+          const ws = new WebSocket(`ws://localhost:8001/ws/customer/${newSessionId}`);
 
-      ws.onopen = () => {
-        console.log('Connected to Live Chat');
-        setIsConnected(true);
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: 'Connected to support server. Waiting for an agent...',
-          sender: 'system',
-          timestamp: new Date()
-        }]);
-      };
+          ws.onopen = () => {
+            console.log('Connected to Live Chat');
+            setIsConnected(true);
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              text: 'Connected to support. Waiting for an agent to join...',
+              sender: 'system',
+              timestamp: new Date()
+            }]);
+          };
 
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'agent_message') {
-          setMessages(prev => [...prev, {
+          ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', data);
+            
+            if (data.type === 'message') {
+              if (data.sender === 'agent') {
+                setMessages(prev => [...prev, {
+                  id: Date.now().toString(),
+                  text: data.content,
+                  sender: 'agent',
+                  timestamp: new Date()
+                }]);
+              } else if (data.sender === 'customer') {
+                // Echo back customer message (already added locally)
+              }
+            } else if (data.type === 'agent_joined') {
+              setMessages(prev => [...prev, {
+                id: Date.now().toString(),
+                text: data.message || 'An agent has joined the chat',
+                sender: 'system',
+                timestamp: new Date()
+              }]);
+            } else if (data.type === 'history') {
+              // Load chat history
+              if (data.messages && data.messages.length > 0) {
+                const historyMessages = data.messages.map((msg: any) => ({
+                  id: Date.now().toString() + Math.random(),
+                  text: msg.content,
+                  sender: msg.sender,
+                  timestamp: new Date(msg.timestamp)
+                }));
+                setMessages(historyMessages);
+              }
+            } else if (data.type === 'session_closed') {
+              setMessages(prev => [...prev, {
+                id: Date.now().toString(),
+                text: data.message || 'This chat session has been closed.',
+                sender: 'system',
+                timestamp: new Date()
+              }]);
+              setIsConnected(false);
+              setTimeout(() => {
+                ws.close();
+              }, 2000);
+            }
+          };
+
+          ws.onclose = () => {
+            console.log('Disconnected from Live Chat');
+            setIsConnected(false);
+            setSocket(null);
+          };
+
+          ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              text: 'Connection error. Please try again.',
+              sender: 'system',
+              timestamp: new Date()
+            }]);
+          };
+
+          setSocket(ws);
+        })
+        .catch(err => {
+          console.error('Failed to create session:', err);
+          setMessages([{
             id: Date.now().toString(),
-            text: data.message,
-            sender: 'agent',
-            timestamp: new Date()
-          }]);
-        } else if (data.type === 'agent_connected') {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            text: data.message,
+            text: 'Failed to connect to support. Please try again later.',
             sender: 'system',
             timestamp: new Date()
           }]);
-        } else if (data.type === 'system') {
-             setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            text: data.message,
-            sender: 'system',
-            timestamp: new Date()
-          }]);
-        } else if (data.type === 'session_closed') {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            text: data.message + (data.resolution_note ? ` Note: ${data.resolution_note}` : ''),
-            sender: 'system',
-            timestamp: new Date()
-          }]);
-          setIsConnected(false);
-          // Disconnect after short delay
-          setTimeout(() => {
-            ws.close();
-          }, 2000);
-        }
-      };
-
-      ws.onclose = () => {
-        console.log('Disconnected from Live Chat');
-        setIsConnected(false);
-        setSocket(null);
-      };
-
-      setSocket(ws);
+        });
     }
 
     return () => {
@@ -93,7 +139,7 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
         setSocket(null);
       }
     };
-  }, [isOpen, clientId]);
+  }, [isOpen, sessionId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -105,8 +151,11 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
 
     const messageText = inputMessage.trim();
     
-    // Send to WebSocket
-    socket.send(JSON.stringify({ message: messageText }));
+    // Send to WebSocket with correct action format
+    socket.send(JSON.stringify({
+      action: 'send_message',
+      content: messageText
+    }));
 
     // Add to local state
     setMessages(prev => [...prev, {

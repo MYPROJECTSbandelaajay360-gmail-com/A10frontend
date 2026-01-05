@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Menu, X, Phone, Mail, MessageCircle, User, LogOut } from 'lucide-react';
+import { Search, Menu, X, Phone, Mail, MessageCircle, User, LogOut, BarChart3, Users, Settings, Bell, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +12,7 @@ export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -64,13 +65,15 @@ export default function Header() {
     }
   };
 
+  const isActive = (path: string) => pathname === path;
+
   // Prevent hydration mismatch by not rendering auth buttons until mounted
   if (!mounted) {
     return (
       <header className="bg-white/95 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-3 group">
+            <Link href="/dashboard" className="flex items-center space-x-3 group">
               <div className="relative">
                 <Image
                   src="/images/logo.png"
@@ -81,9 +84,12 @@ export default function Header() {
                   priority
                 />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                ExtraHand Support
-              </span>
+              <div>
+                <div className="text-xl font-bold bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 bg-clip-text text-transparent">
+                  ExtraHand
+                </div>
+                <div className="text-xs font-semibold text-gray-600 -mt-1">Support Agent Portal</div>
+              </div>
             </Link>
           </div>
         </div>
@@ -97,7 +103,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href="/dashboard" className="flex items-center space-x-3 group">{' '}
             <div className="relative">
               <Image
                 src="/images/logo.png"
@@ -109,10 +115,10 @@ export default function Header() {
               />
             </div>
             <div className="hidden sm:block">
-              <div className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
+              <div className="text-xl font-bold bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 bg-clip-text text-transparent">
                 ExtraHand
               </div>
-              <div className="text-xs text-gray-500 -mt-1">Agent Portal</div>
+              <div className="text-xs font-semibold text-gray-600 -mt-1">Support Agent Portal</div>
             </div>
           </Link>
 
@@ -120,16 +126,47 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-1">
             <Link
               href="/dashboard"
-              className="px-4 py-2 text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all font-medium"
+              className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
+                isActive('/dashboard')
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'text-gray-700 hover:text-amber-700 hover:bg-amber-50'
+              }`}
             >
-              Dashboard
+              <MessageCircle className="h-4 w-4" />
+              <span>Dashboard</span>
+            </Link>
+            <Link
+              href="/analytics"
+              className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
+                isActive('/analytics')
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'text-gray-700 hover:text-amber-700 hover:bg-amber-50'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Analytics</span>
+            </Link>
+            <Link
+              href="/knowledge-base"
+              className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
+                isActive('/knowledge-base')
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'text-gray-700 hover:text-amber-700 hover:bg-amber-50'
+              }`}
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Knowledge Base</span>
             </Link>
 
             {/* Auth Buttons */}
             {isLoggedIn ? (
               <div className="flex items-center space-x-3 ml-2">
+                <button className="relative p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
                 <div className="flex items-center space-x-2 px-3 py-1.5 bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-gray-700">
@@ -148,7 +185,7 @@ export default function Header() {
               <div className="flex items-center space-x-2 ml-2">
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all font-medium"
+                  className="px-4 py-2 text-gray-700 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all font-medium"
                 >
                   Login
                 </Link>
@@ -175,17 +212,46 @@ export default function Header() {
             <nav className="flex flex-col space-y-2">
               <Link
                 href="/dashboard"
-                className="px-4 py-2 text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all font-medium"
+                className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
+                  isActive('/dashboard')
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'text-gray-700 hover:text-amber-700 hover:bg-amber-50'
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Dashboard
+                <MessageCircle className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
+              <Link
+                href="/analytics"
+                className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
+                  isActive('/analytics')
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'text-gray-700 hover:text-amber-700 hover:bg-amber-50'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>Analytics</span>
+              </Link>
+              <Link
+                href="/knowledge-base"
+                className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
+                  isActive('/knowledge-base')
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'text-gray-700 hover:text-amber-700 hover:bg-amber-50'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <HelpCircle className="h-4 w-4" />
+                <span>Knowledge Base</span>
               </Link>
               
               {isLoggedIn ? (
                 <>
                   <div className="px-4 py-3 bg-gray-50 rounded-lg border-t border-gray-200 mt-2 pt-4 mx-4">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
                         {user?.name?.charAt(0).toUpperCase()}
                       </div>
                       <div>

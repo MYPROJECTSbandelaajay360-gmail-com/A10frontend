@@ -7,7 +7,15 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    // Clear the refresh token cookie
+    // Clear both access and refresh token cookies
+    response.cookies.set('accessToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
     response.cookies.set('refreshToken', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

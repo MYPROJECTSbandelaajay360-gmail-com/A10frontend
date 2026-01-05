@@ -39,8 +39,11 @@ export default function LoginPage() {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       
+      // Dispatch custom event to notify Header component about auth change
+      window.dispatchEvent(new Event('auth-change'));
+      
       // Redirect to dashboard
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'An error occurred during login');
     } finally {
@@ -56,7 +59,8 @@ export default function LoginPage() {
             <div className="bg-gradient-to-r from-yellow-400 to-amber-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <Lock className="h-8 w-8 text-gray-900" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900">Agent Portal</h2>
+            <h2 className="text-3xl font-bold text-gray-900">ExtraHand</h2>
+            <p className="text-lg font-semibold text-amber-600 -mt-1">Support Agent Portal</p>
             <p className="mt-2 text-sm text-gray-600">
               Please sign in to access the support dashboard
             </p>

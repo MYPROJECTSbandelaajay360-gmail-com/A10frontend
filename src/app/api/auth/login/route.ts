@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import connectDB from '@/lib/db';
-import User from '@/models/User';
-import { signAccessToken, signRefreshToken } from '@/lib/jwt';
+
+// Simple in-memory user storage for development
+const users = [
+  {
+    email: 'agent@gmail.com',
+    password: 'Agent123!',
+    name: 'Support Agent',
+    role: 'agent'
+  },
+  {
+    email: 'testuser@gmail.com',
+    password: 'TestPass123!',
+    name: 'Test User',
+    role: 'agent'
+  },
+  {
+    email: 'vijay@gmail.com',
+    password: 'vijay123',
+    name: 'Vijay',
+    role: 'agent'
+  }
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,15 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Valid email is required' },
-        { status: 400 }
-      );
-    }
-
     // Validate Gmail only
     if (!email.toLowerCase().endsWith('@gmail.com')) {
       return NextResponse.json(
@@ -33,111 +42,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectDB();
+    // Find user
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() })
-      .select('+passwordHash +loginAttempts +lockUntil');
-
-    if (!user) {
+    if (!user || user.password !== password) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    // Check if account is locked
-    if (user.lockUntil && user.lockUntil > new Date()) {
-      const remainingTime = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
-      return NextResponse.json(
-        { error: `Too many login attempts. Account is locked. Try again after ${remainingTime} minutes.` },
-        { status: 429 }
-      );
-    }
-
-    // Verify password
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      await user.incLoginAttempts();
-      const attemptsLeft = 5 - (user.loginAttempts + 1);
-      
-      if (attemptsLeft <= 0) {
-        return NextResponse.json(
-          { error: 'Too many failed login attempts. Account locked for 15 minutes.' },
-          { status: 429 }
-        );
-      }
-      
-      return NextResponse.json(
-        { error: `Invalid credentials. ${attemptsLeft} attempts remaining.` },
-        { status: 401 }
-      );
-    }
-
-    // Check account status
-    if (user.status !== 'APPROVED') {
-      let message = 'Account not approved yet';
-      if (user.status === 'REJECTED') message = 'Account has been rejected';
-      if (user.status === 'SUSPENDED') message = 'Account has been suspended';
-      
-      return NextResponse.json(
-        { error: message },
-        { status: 403 }
-      );
-    }
-
-    // Reset login attempts on successful login
-    await user.resetLoginAttempts();
-
-    // Update last login info
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    
-    user.lastLoginAt = new Date();
-    user.lastLoginIP = clientIP;
-    await user.save();
-
-    // Generate tokens
-    const tokenPayload = {
-      userId: user._id.toString(),
+    // Create simple token (just base64 encoded user info for development)
+    const token = Buffer.from(JSON.stringify({
       email: user.email,
+      name: user.name,
       role: user.role,
-    };
+      exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    })).toString('base64');
 
-    const accessToken = signAccessToken(tokenPayload);
-    const refreshToken = signRefreshToken(tokenPayload);
-
-    // Create response
-    const response = NextResponse.json(
-      {
-        message: 'Login successful',
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          emailVerified: user.emailVerified,
-        },
-        accessToken,
+    // Create response with cookie
+    const response = NextResponse.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        email: user.email,
+        name: user.name,
+        role: user.role
       },
-      { status: 200 }
-    );
+      accessToken: token,
+      refreshToken: token
+    });
 
-    // Set refresh token as HTTP-only cookie
-    response.cookies.set('refreshToken', refreshToken, {
+    // Set httpOnly cookie for better security
+    response.cookies.set('accessToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: '/',
+      maxAge: 60 * 60 * 24 // 24 hours
     });
 
     return response;
+
   } catch (error) {
     console.error('Login error:', error);
-    
     return NextResponse.json(
       { error: 'Failed to login. Please try again.' },
       { status: 500 }

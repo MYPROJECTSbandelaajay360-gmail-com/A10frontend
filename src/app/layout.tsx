@@ -7,9 +7,9 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ExtraHand Help Center",
-  description: "Get help with ExtraHand - Your trusted task marketplace",
-  keywords: ["ExtraHand", "help", "support", "FAQ", "customer service"],
+  title: "ExtraHand Support Agent Portal",
+  description: "ExtraHand Support Agent Portal - Manage customer support and live chat sessions",
+  keywords: ["ExtraHand", "support agent", "live chat", "customer service", "agent portal"],
 };
 
 export default function RootLayout({
@@ -21,8 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <main>{children}</main>
       </body>
     </html>
   );

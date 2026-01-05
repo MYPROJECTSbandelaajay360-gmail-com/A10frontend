@@ -35,6 +35,7 @@ async function setupAgent() {
     console.log('✅ Connected to MongoDB\n');
 
     // Agent credentials
+    // Agent credentials
     const agentEmail = 'agent@gmail.com';
     const agentPassword = 'Agent123!';
     const agentName = 'Support Agent';
