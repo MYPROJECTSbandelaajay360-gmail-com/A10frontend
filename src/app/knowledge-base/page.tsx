@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Book, FileText, HelpCircle, ExternalLink, ChevronRight, Bookmark, Clock, Star } from 'lucide-react';
+import { Search, Book, FileText, HelpCircle, ExternalLink, ChevronRight, Bookmark, Clock, Star, ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [articles, setArticles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -15,78 +17,45 @@ export default function KnowledgeBasePage() {
       router.push('/login');
       return;
     }
+
+    const fetchArticles = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/articles');
+        const result = await response.json();
+        if (result.success) {
+          setArticles(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticles();
   }, [router]);
 
-  const categories = [
-    { id: 'all', name: 'All Articles', icon: '📚', count: 45 },
-    { id: 'getting-started', name: 'Getting Started', icon: '🚀', count: 12 },
-    { id: 'payments', name: 'Payments & Billing', icon: '💳', count: 8 },
-    { id: 'account', name: 'Account Management', icon: '👤', count: 10 },
-    { id: 'safety', name: 'Safety & Security', icon: '🔒', count: 7 },
-    { id: 'policies', name: 'Policies', icon: '📋', count: 8 },
+  const categoriesSet = [
+    { id: 'all', name: 'All Articles', icon: '📚' },
+    { id: 'Understanding ExtraHand', name: 'Understanding ExtraHand', icon: '📖' },
+    { id: 'Login/Account Management', name: 'Login/Account Management', icon: '👤' },
+    { id: 'Payments & Refunds', name: 'Payments & Refunds', icon: '💳' },
+    { id: 'Managing Tasks', name: 'Managing Tasks', icon: '📋' },
+    { id: 'Tips for Customers', name: 'Tips for Customers', icon: '💡' },
+    { id: 'Trust & Safety', name: 'Trust & Safety', icon: '🛡️' },
   ];
 
-  const articles = [
-    {
-      id: 1,
-      title: 'How to Handle Payment Disputes',
-      category: 'payments',
-      excerpt: 'Step-by-step guide on resolving payment issues and disputes between customers and helpers.',
-      views: 1243,
-      lastUpdated: '2 days ago',
-      popular: true,
-    },
-    {
-      id: 2,
-      title: 'Customer Account Verification Process',
-      category: 'account',
-      excerpt: 'Learn about the verification steps and how to help customers through the process.',
-      views: 987,
-      lastUpdated: '5 days ago',
-      popular: true,
-    },
-    {
-      id: 3,
-      title: 'Safety Guidelines for Task Completion',
-      category: 'safety',
-      excerpt: 'Important safety protocols and guidelines that both customers and helpers should follow.',
-      views: 856,
-      lastUpdated: '1 week ago',
-      popular: false,
-    },
-    {
-      id: 4,
-      title: 'Refund and Cancellation Policies',
-      category: 'policies',
-      excerpt: 'Complete guide to ExtraHand refund policies and how to process cancellations.',
-      views: 1521,
-      lastUpdated: '3 days ago',
-      popular: true,
-    },
-    {
-      id: 5,
-      title: 'Onboarding New Users',
-      category: 'getting-started',
-      excerpt: 'Best practices for helping new users get started with the ExtraHand platform.',
-      views: 2104,
-      lastUpdated: '1 day ago',
-      popular: true,
-    },
-    {
-      id: 6,
-      title: 'Handling Multiple Payment Methods',
-      category: 'payments',
-      excerpt: 'Guide to supporting various payment options and troubleshooting payment issues.',
-      views: 654,
-      lastUpdated: '1 week ago',
-      popular: false,
-    },
-  ];
+  const categories = categoriesSet.map(cat => ({
+    ...cat,
+    count: cat.id === 'all'
+      ? articles.length
+      : articles.filter(a => a.category === cat.id).length
+  }));
 
   const filteredArticles = articles.filter(article => {
     const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
     const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         article.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      article.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -97,18 +66,39 @@ export default function KnowledgeBasePage() {
     { title: 'Report a Bug', icon: '🐛' },
   ];
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header with Navigation */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
-              <Book className="h-6 w-6 text-white" />
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center text-amber-600 hover:text-amber-700 mb-4 font-medium transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span>Back to Dashboard</span>
+          </button>
+
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center space-x-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Book className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <span>Knowledge Base</span>
           </h1>
-          <p className="text-gray-600 mt-2">Search articles, guides, and documentation to help customers</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Search articles, guides, and documentation to help customers</p>
         </div>
 
         {/* Search Bar */}
@@ -136,11 +126,10 @@ export default function KnowledgeBasePage() {
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between ${
-                      selectedCategory === category.id
-                        ? 'bg-amber-50 text-amber-700 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between ${selectedCategory === category.id
+                      ? 'bg-amber-50 text-amber-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
                     <span className="flex items-center space-x-2">
                       <span>{category.icon}</span>
@@ -173,45 +162,51 @@ export default function KnowledgeBasePage() {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Popular Articles Badge */}
-            {selectedCategory === 'all' && !searchQuery && (
+            {selectedCategory === 'all' && !searchQuery && articles.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center space-x-2 text-amber-600 mb-4">
                   <Star className="h-5 w-5 fill-amber-600" />
-                  <span className="font-semibold">Popular Articles</span>
+                  <span className="font-semibold">All Articles</span>
                 </div>
               </div>
             )}
 
             {/* Articles Grid */}
             <div className="space-y-4">
-              {filteredArticles.length > 0 ? (
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <Loader2 className="h-10 w-10 animate-spin mb-4 text-amber-500" />
+                  <p>Loading articles...</p>
+                </div>
+              ) : filteredArticles.length > 0 ? (
                 filteredArticles.map((article) => (
                   <div
-                    key={article.id}
+                    key={article._id || article.id}
                     className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => window.open(`http://localhost:3004/article/${article._id}`, '_blank')}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          {article.popular && (
+                          {article.views > 100 && (
                             <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
                               Popular
                             </span>
                           )}
-                          <span className="text-xs text-gray-500">{categories.find(c => c.id === article.category)?.name}</span>
+                          <span className="text-xs text-gray-500">{article.category}</span>
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-amber-600 transition-colors">
                           {article.title}
                         </h3>
-                        <p className="text-gray-600 text-sm mb-4">{article.excerpt}</p>
+                        <p className="text-gray-600 text-sm mb-4">{article.description}</p>
                         <div className="flex items-center space-x-4 text-xs text-gray-500">
                           <span className="flex items-center space-x-1">
                             <Clock className="h-3 w-3" />
-                            <span>{article.lastUpdated}</span>
+                            <span>{formatDate(article.updatedAt)}</span>
                           </span>
                           <span className="flex items-center space-x-1">
                             <FileText className="h-3 w-3" />
-                            <span>{article.views} views</span>
+                            <span>{article.views || 0} views</span>
                           </span>
                         </div>
                       </div>

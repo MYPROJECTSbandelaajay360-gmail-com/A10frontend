@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import connectDB from '@/lib/db';
+import User from '@/models/User';
 
 // Simple in-memory user storage for development
 const users = [
@@ -42,10 +45,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    let user = null;
 
-    if (!user || user.password !== password) {
+    // 1. Try Database
+    try {
+      await connectDB();
+      const dbUser = await User.findOne({ email: email.toLowerCase() });
+
+      if (dbUser) {
+        const isMatch = await bcrypt.compare(password, dbUser.passwordHash);
+        if (isMatch) {
+          user = {
+            email: dbUser.email,
+            name: dbUser.name,
+            role: dbUser.role || 'agent'
+          };
+        }
+      }
+    } catch (dbErr) {
+      console.error('Database login check failed:', dbErr);
+    }
+
+    // 2. Try Hardcoded (Fallback/Dev)
+    if (!user) {
+      const hardcodedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (hardcodedUser && hardcodedUser.password === password) {
+        user = {
+          email: hardcodedUser.email,
+          name: hardcodedUser.name,
+          role: hardcodedUser.role
+        };
+      }
+    }
+
+    if (!user) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }

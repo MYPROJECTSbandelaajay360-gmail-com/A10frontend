@@ -11,7 +11,7 @@ const isStrongPassword = (password: string): boolean => {
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  
+
   return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
 };
 
@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
       name,
       email: email.toLowerCase(),
       passwordHash,
-      role: 'user',
+      role: 'agent', // Default to agent for this portal
       status: 'APPROVED',
-      emailVerified: false,
+      emailVerified: true, // Auto-verify for dev
     });
 
     // Generate email verification token (optional)
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error('Signup error:', error);
-    
+
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern || {})[0];
       return NextResponse.json(
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-    
+
     return NextResponse.json(
       { error: 'Failed to signup. Please try again.' },
       { status: 500 }
