@@ -10,7 +10,7 @@ export default function AuthDebugPage() {
     const checkAuth = () => {
       const accessToken = localStorage.getItem('accessToken');
       const userStr = localStorage.getItem('user');
-      
+
       setAuthState({
         hasToken: !!accessToken,
         token: accessToken ? accessToken.substring(0, 20) + '...' : null,
@@ -40,7 +40,7 @@ export default function AuthDebugPage() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold mb-6">Authentication Debug Page</h1>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded">
               <h2 className="font-semibold text-lg mb-2">Current Auth State:</h2>
@@ -90,7 +90,7 @@ export default function AuthDebugPage() {
             <div className="mt-4 p-4 bg-yellow-50 rounded">
               <h3 className="font-semibold mb-2">Test Credentials Format:</h3>
               <ul className="list-disc list-inside space-y-1">
-                <li>Email: yourname@gmail.com (must be Gmail)</li>
+                <li>Email: yourname@example.com (any valid email)</li>
                 <li>Password: YourPass123! (must have uppercase, lowercase, number, special char)</li>
               </ul>
             </div>

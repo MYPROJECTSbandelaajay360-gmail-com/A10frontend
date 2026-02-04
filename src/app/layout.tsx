@@ -7,8 +7,8 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ExtraHand Support Agent Portal",
-  description: "ExtraHand Support Agent Portal - Manage customer support and live chat sessions",
+  title: "ExtraHand Ticket Management Portal",
+  description: "ExtraHand Ticket Management Portal - Manage customer support and live chat sessions",
   keywords: ["ExtraHand", "support agent", "live chat", "customer service", "agent portal"],
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} overflow-x-hidden`}>
+      <body className={`${inter.className} overflow-x-hidden`} suppressHydrationWarning={true}>
         <Header />
         <main>{children}</main>
       </body>

@@ -22,6 +22,18 @@ const users = [
     password: 'vijay123',
     name: 'Vijay',
     role: 'agent'
+  },
+  {
+    email: 'admin@gmail.com',
+    password: 'Admin123!',
+    name: 'Admin User',
+    role: 'admin'
+  },
+  {
+    email: 'supervisor@gmail.com',
+    password: 'Supervisor123!',
+    name: 'Supervisor',
+    role: 'supervisor'
   }
 ];
 
@@ -37,13 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate Gmail only
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return NextResponse.json(
-        { error: 'Only Gmail addresses (@gmail.com) are allowed' },
-        { status: 400 }
-      );
-    }
+
 
     let user = null;
 

@@ -1,9 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, User, MessageSquare, Clock, CheckCircle, XCircle, LogOut, Settings, Edit2, Save, BarChart3, ChevronRight, Bell, Shield, Mail, Check, Zap, X as CloseIcon, History, Camera, Award, TrendingUp, Users, ArrowLeft, Search, Book, Menu } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { formatToIST, formatTimeToIST, formatDateToIST } from '../../lib/dateUtils';
+import { Send, User, MessageSquare, Clock, CheckCircle, XCircle, LogOut, Settings, Edit2, Save, BarChart3, ChevronRight, Bell, Shield, Mail, Check, Zap, X as CloseIcon, History, Camera, Award, TrendingUp, Users, ArrowLeft, Search, Book, Menu, LayoutDashboard, List, UserPlus, FileCheck, Upload, ChevronDown, ChevronUp, Heart, Plus, RefreshCw, Trash2, Filter, MoreVertical, Building, FileText, Phone, Download, AlertCircle, Activity, Globe, Headphones } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { formatToIST, formatTimeToIST, formatDateToIST, formatTimeAgo } from '../../lib/dateUtils';
+import LiveMonitoringView from './LiveMonitoringView';
+import TeamPerformanceView from './TeamPerformanceView';
+import AdminSettingsView from './AdminSettingsView';
+import UserManagementView from './UserManagementView';
+import SupervisorDashboardView from './SupervisorDashboardView';
+import AllTicketsView from './AllTicketsView';
 
 interface Message {
   content: string;
@@ -34,7 +40,279 @@ interface QuickReply {
   icon: string;
 }
 
-type View = 'chat' | 'profile' | 'settings' | 'history';
+interface Invite {
+  _id: string;
+  email: string;
+  role: string;
+  team: string;
+  department: string;
+  status: 'pending' | 'accepted' | 'revoked';
+  invitedBy?: string;
+  createdAt: string;
+}
+
+type View = 'chat' | 'profile' | 'settings' | 'history' | 'admin_dashboard' | 'admin_monitoring' | 'admin_performance' | 'admin_settings' | 'admin_invite' | 'admin_users' | 'supervisor_dashboard' | 'supervisor_tickets' | 'supervisor_team';
+
+interface InviteUserViewProps {
+  agentUsername: string;
+  showNotification: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onNavigate: (view: string) => void;
+}
+
+const InviteUserView = ({ agentUsername, showNotification, onNavigate }: InviteUserViewProps) => {
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [isLoadingInvites, setIsLoadingInvites] = useState(true);
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    role: 'agent',
+    team: '',
+    department: ''
+  });
+  const [isSubmittingInvite, setIsSubmittingInvite] = useState(false);
+
+  useEffect(() => {
+    fetchInvites();
+  }, []);
+
+  const fetchInvites = async () => {
+    try {
+      setIsLoadingInvites(true);
+      const response = await fetch('/api/admin/invites');
+      if (response.ok) {
+        const data = await response.json();
+        setInvites(data.invites);
+      }
+    } catch (error) {
+      console.error('Failed to fetch invites', error);
+    } finally {
+      setIsLoadingInvites(false);
+    }
+  };
+
+  const handleCreateInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteForm.email)) {
+      showNotification('Please enter a valid email address', 'error');
+      return;
+    }
+
+    setIsSubmittingInvite(true);
+    try {
+      const response = await fetch('/api/admin/invites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...inviteForm,
+          invitedBy: agentUsername
+        }),
+      });
+
+      if (response.ok) {
+        showNotification('Invite sent successfully', 'success');
+        setInviteForm({ email: '', role: 'agent', team: '', department: '' });
+        fetchInvites();
+      } else {
+        const data = await response.json();
+        showNotification(data.error || 'Failed to send invite', 'error');
+      }
+    } catch (error) {
+      showNotification('An error occurred', 'error');
+    } finally {
+      setIsSubmittingInvite(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden overflow-y-auto">
+      <div className="max-w-7xl mx-auto w-full p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Management</h1>
+            <p className="text-gray-500">Create invites for new admin users. They'll receive an email with a link to join.</p>
+          </div>
+          <button
+            onClick={() => onNavigate('/dashboard')}
+            className="lg:hidden p-2 text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Create Invite Form */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Create Admin Invite</h2>
+          <p className="text-sm text-gray-500 mb-6">Send an invite email to a new admin user. They can login with any Microsoft account.</p>
+
+          <form onSubmit={handleCreateInvite}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <div className="col-span-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">Email *</label>
+                <input
+                  type="email"
+                  value={inviteForm.email}
+                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                  placeholder="user@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 outline-none"
+                  required
+                />
+                <p className="text-[10px] text-gray-400 mt-1">For notification only</p>
+              </div>
+              <div className="col-span-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">Role *</label>
+                <div className="relative">
+                  <select
+                    value={inviteForm.role}
+                    onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 outline-none appearance-none bg-white"
+                  >
+                    <option value="agent">Agent</option>
+                    <option value="supervisor">Supervisor</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              <div className="col-span-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">Team (Optional)</label>
+                <input
+                  type="text"
+                  value={inviteForm.team}
+                  onChange={(e) => setInviteForm({ ...inviteForm, team: e.target.value })}
+                  placeholder="Onboarding Team"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 outline-none"
+                />
+              </div>
+              <div className="col-span-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">Department (Optional)</label>
+                <input
+                  type="text"
+                  value={inviteForm.department}
+                  onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
+                  placeholder="Operations"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-start">
+              <button
+                type="submit"
+                disabled={isSubmittingInvite}
+                className="bg-amber-400 hover:bg-amber-500 text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-colors flex items-center shadow-md shadow-amber-200 disabled:opacity-50"
+                style={{ backgroundColor: '#FBBF24', color: 'white' }}
+              >
+                {isSubmittingInvite ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                Create & Send Invite
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Invites List */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">Admin Invites</h2>
+              <p className="text-sm text-gray-500">View and manage all admin invites</p>
+            </div>
+            <div className="mt-4 md:mt-0 relative">
+              <button className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                <span>All Status</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Team</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Used By</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {isLoadingInvites ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center">
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : invites.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-gray-500 text-sm">
+                      No invites found. Create one above.
+                    </td>
+                  </tr>
+                ) : (
+                  invites.map((invite) => (
+                    <tr key={invite._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-4 text-sm font-medium text-gray-900">{invite.email}</td>
+                      <td className="py-4 px-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                          {invite.role}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-500">{invite.team || '-'}</td>
+                      <td className="py-4 px-4 text-sm text-gray-500">{invite.department || '-'}</td>
+                      <td className="py-4 px-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${invite.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                          invite.status === 'revoked' ? 'bg-red-100 text-red-800' :
+                            'bg-amber-100 text-amber-800'
+                          }`}>
+                          {invite.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-500">
+                        {invite.status === 'accepted' ? (
+                          <div className="flex flex-col">
+                            <span className="text-gray-900 font-medium">{invite.invitedBy || 'Admin'}</span>
+                          </div>
+                        ) : '-'}
+                      </td>
+                      <td className="py-4 px-4">
+                        {invite.status === 'pending' && (
+                          <button
+                            className="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded"
+                            title="Revoke Invite"
+                            onClick={() => {/* Implement revoke logic */ }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 text-xs text-gray-400 text-right">
+            Showing {invites.length} Results
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 export default function AgentDashboard() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -51,8 +329,19 @@ export default function AgentDashboard() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [agentUsername, setAgentUsername] = useState<string>('');
   const [agentEmail, setAgentEmail] = useState<string>('');
+  const [userRole, setUserRole] = useState<'user' | 'admin' | 'supervisor'>('user');
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+
+  // Admin Stats State
+  const [adminStats, setAdminStats] = useState({
+    total_tickets: 0,
+    active_agents: 0,
+    avg_resolution_time: '-'
+  });
+  const [isLoadingAdminStats, setIsLoadingAdminStats] = useState(false);
 
   // New State for Features
   const [currentView, setCurrentView] = useState<View>('chat');
@@ -102,6 +391,48 @@ export default function AgentDashboard() {
   // Mobile Sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Settings state
+  const [settings, setSettings] = useState({
+    enableSoundAlerts: true,
+    enableEmailNotifications: true,
+    autoAssignChats: true
+  });
+
+  const settingsRef = useRef(settings);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  // Fetch settings on mount
+  useEffect(() => {
+    fetch('http://localhost:8001/api/admin/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Object.keys(data).length > 0) {
+          setSettings(prev => ({ ...prev, ...data }));
+        }
+      })
+      .catch(err => console.error('Failed to load settings:', err));
+  }, []);
+
+  // Handle view from URL params
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view && (view === 'profile' || view === 'settings')) {
+      setCurrentView(view as View);
+    }
+  }, [searchParams]);
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/pang/pop.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log('Audio play blocked:', e));
+    } catch (e) {
+      console.error('Audio error:', e);
+    }
+  };
+
   // Show notification helper
   const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification({ message, type });
@@ -119,8 +450,22 @@ export default function AgentDashboard() {
     }
 
     const user = JSON.parse(userStr);
+
+    if (user.role === 'supervisor') {
+      router.push('/dashboard/supervisor');
+      return;
+    }
+
     setAgentUsername(user.name || user.email);
     setAgentEmail(user.email);
+    const role = user.role || 'user';
+    setUserRole(role);
+    if (role === 'admin') {
+      setCurrentView('admin_dashboard');
+    } else {
+      // Default agent view
+      setCurrentView('chat');
+    }
     setNewName(user.name || user.email);
     setIsAuthChecking(false);
 
@@ -217,8 +562,22 @@ export default function AgentDashboard() {
         console.log('[Agent Dashboard] Received WebSocket message:', data);
 
         if (data.type === 'dashboard_update') {
-          setPendingChats(data.pending);
+          setPendingChats(prev => {
+            // Check for new pending chats (simple length check)
+            if (data.pending.length > prev.length) {
+              if (settingsRef.current?.enableSoundAlerts) {
+                playNotificationSound();
+              }
+              showNotification('New incoming chat request!', 'info');
+            }
+            return data.pending;
+          });
           setActiveChats(data.active);
+        } else if (data.type === 'chat_assigned') {
+          if (settingsRef.current?.enableSoundAlerts) {
+            playNotificationSound();
+          }
+          showNotification(data.message || `You have been assigned to ${data.customer_name}`, 'success');
         } else if (data.type === 'pending_chats') {
           setPendingChats(data.data);
         } else if (data.type === 'chat_taken') {
@@ -230,9 +589,15 @@ export default function AgentDashboard() {
             setSelectedSessionId(null);
           }
           showNotification(data.message || 'Already taken', 'error');
+        } else if (data.type === 'SETTINGS_UPDATE') {
+          setSettings(prev => ({ ...prev, ...data.settings }));
+          showNotification('System settings updated', 'info');
         } else if (data.type === 'message') {
           const { session_id, content, sender, timestamp } = data;
           if (sender === 'customer') {
+            if (settingsRef.current?.enableSoundAlerts) {
+              playNotificationSound();
+            }
             setMessages(prev => ({
               ...prev,
               [session_id]: [...(prev[session_id] || []), { content, sender, timestamp }]
@@ -269,6 +634,27 @@ export default function AgentDashboard() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, selectedSessionId]);
+
+  useEffect(() => {
+    if (currentView === 'admin_dashboard') {
+      fetchAdminStats();
+    }
+  }, [currentView]);
+
+  const fetchAdminStats = async () => {
+    setIsLoadingAdminStats(true);
+    try {
+      const response = await fetch('http://localhost:8001/api/admin/stats/overview');
+      if (response.ok) {
+        const data = await response.json();
+        setAdminStats(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch admin stats:', error);
+    } finally {
+      setIsLoadingAdminStats(false);
+    }
+  };
 
   const handleJoinChat = (sessionId: number) => {
     if (socket && !acceptingChatId) {
@@ -454,9 +840,50 @@ export default function AgentDashboard() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const imageData = reader.result as string;
-        console.log('Image loaded, size:', imageData.length);
-        setProfileImage(imageData);
-        localStorage.setItem('profileImage', imageData);
+
+        // Compress/Resize image before saving to avoid QuotaExceededError
+        const img = new Image();
+        img.src = imageData;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const MAX_SIZE = 256; // Limit to 256px for avatar usage
+
+          let width = img.width;
+          let height = img.height;
+
+          // Keep aspect ratio
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Export as JPEG with 0.7 quality to reduce size significantly
+            const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+
+            try {
+              localStorage.setItem('profileImage', compressedData);
+              setProfileImage(compressedData);
+              // Dispatch event so Header updates
+              window.dispatchEvent(new Event('auth-change'));
+            } catch (e) {
+              console.error('Storage quota exceeded:', e);
+              alert('Failed to save image. Please use a smaller image file.');
+            }
+          }
+        };
       };
       reader.onerror = () => {
         console.error('Error reading file');
@@ -467,108 +894,108 @@ export default function AgentDashboard() {
   };
 
   const renderSidebar = () => (
-    <div className={`fixed inset-y-0 left-0 z-40 w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 shadow-lg shadow-amber-200">
-            <User className="h-6 w-6 text-white" />
+    <div className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-2 shadow-lg shadow-amber-200">
+            <User className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-bold text-gray-900 text-lg">ExtraHand Agent</h2>
-            <div className="flex items-center mt-1">
-              <span className="relative flex h-2.5 w-2.5 mr-2">
+            <h2 className="font-bold text-gray-900 text-base">ExtraHand Agent</h2>
+            <div className="flex items-center mt-0.5">
+              <span className="relative flex h-2 w-2 mr-1.5">
                 {isConnected ? (
                   <>
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                   </>
                 ) : (
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                 )}
               </span>
-              <span className="text-xs font-medium text-gray-600 truncate">
+              <span className="text-[10px] font-medium text-gray-600 truncate">
                 {isConnected ? agentUsername : 'Disconnected'}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-amber-100 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium mb-1">Pending</div>
-            <div className="text-xl font-bold text-amber-600">{pendingChats.length}</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-white/80 backdrop-blur-sm p-2 rounded-lg border border-amber-100 shadow-sm">
+            <div className="text-[10px] text-gray-500 font-medium mb-0.5">Pending</div>
+            <div className="text-lg font-bold text-amber-600">{pendingChats.length}</div>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-green-100 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium mb-1">Active</div>
-            <div className="text-xl font-bold text-green-600">{activeChats.length}</div>
+          <div className="bg-white/80 backdrop-blur-sm p-2 rounded-lg border border-green-100 shadow-sm">
+            <div className="text-[10px] text-gray-500 font-medium mb-0.5">Active</div>
+            <div className="text-lg font-bold text-green-600">{activeChats.length}</div>
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-4 custom-scrollbar">
-        <nav className="p-4 space-y-1">
+        <nav className="p-3 space-y-1">
           <button
             onClick={() => setCurrentView('chat')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${currentView === 'chat'
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'chat'
               ? 'bg-amber-50 text-amber-700 font-medium shadow-sm ring-1 ring-amber-200'
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <MessageSquare className="h-5 w-5" />
-            <span>Conversations</span>
+            <span className="text-sm">Conversations</span>
           </button>
           <button
-            onClick={() => setCurrentView('profile')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${currentView === 'profile'
+            onClick={() => router.push('/dashboard?view=profile')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'profile'
               ? 'bg-amber-50 text-amber-700 font-medium shadow-sm ring-1 ring-amber-200'
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <User className="h-5 w-5" />
-            <span>Profile</span>
+            <span className="text-sm">Profile</span>
           </button>
           <button
-            onClick={() => setCurrentView('settings')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${currentView === 'settings'
+            onClick={() => router.push('/dashboard?view=settings')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'settings'
               ? 'bg-amber-50 text-amber-700 font-medium shadow-sm ring-1 ring-amber-200'
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <Settings className="h-5 w-5" />
-            <span>Settings</span>
+            <span className="text-sm">Settings</span>
           </button>
           <button
             onClick={() => {
               setCurrentView('history');
               loadClosedTickets(agentEmail || 'admin');
             }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${currentView === 'history'
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'history'
               ? 'bg-amber-50 text-amber-700 font-medium shadow-sm ring-1 ring-amber-200'
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <History className="h-5 w-5" />
-            <span>History</span>
+            <span className="text-sm">History</span>
           </button>
 
           {/* Divider */}
-          <div className="my-2 border-t border-gray-200"></div>
+          <div className="my-2 border-t border-gray-200 mx-2"></div>
 
           {/* External Links */}
           <button
             onClick={() => router.push('/analytics')}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           >
             <BarChart3 className="h-5 w-5" />
-            <span>Analytics</span>
+            <span className="text-sm">Analytics</span>
             <ChevronRight className="h-4 w-4 ml-auto" />
           </button>
           <button
             onClick={() => router.push('/knowledge-base')}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           >
             <Book className="h-5 w-5" />
-            <span>Knowledge Base</span>
+            <span className="text-sm">Knowledge Base</span>
             <ChevronRight className="h-4 w-4 ml-auto" />
           </button>
         </nav>
@@ -701,6 +1128,188 @@ export default function AgentDashboard() {
     </div>
   );
 
+  const renderSupervisorSidebar = () => (
+    <div className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-4 border-b border-gray-100 flex items-center space-x-3 bg-gradient-to-r from-amber-50 to-orange-50">
+
+        <div>
+          <h2 className="font-bold text-gray-900 text-sm">Supervisor Panel</h2>
+          <p className="text-xs text-amber-600 font-medium">Team Oversight</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+        <nav className="space-y-1 px-3">
+          <button
+            onClick={() => setCurrentView('supervisor_dashboard')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'supervisor_dashboard'
+              ? 'bg-amber-50 text-amber-700 font-medium border border-amber-100'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            <LayoutDashboard className="h-5 w-5" />
+            <span className="text-sm">Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('supervisor_tickets')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'supervisor_tickets'
+              ? 'bg-amber-50 text-amber-700 font-medium border border-amber-100'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            <FileText className="h-5 w-5" />
+            <span className="text-sm">All Tickets</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('supervisor_team')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'supervisor_team'
+              ? 'bg-amber-50 text-amber-700 font-medium border border-amber-100'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            <Users className="h-5 w-5" />
+            <span className="text-sm">Team Performance</span>
+          </button>
+        </nav>
+      </div>
+
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <button
+          onClick={async () => {
+            try {
+              await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('profileImage');
+            window.dispatchEvent(new Event('auth-change'));
+            router.push('/login');
+          }}
+          className="flex items-center justify-center w-full text-gray-600 hover:text-red-600 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-all text-sm font-medium group"
+        >
+          <LogOut className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderAdminSidebar = () => (
+    <div className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-4 border-b border-gray-100 flex items-center space-x-3 bg-gradient-to-r from-amber-50 to-orange-50">
+        <div className="bg-amber-100 p-2 rounded-lg">
+          <Shield className="h-6 w-6 text-amber-600" />
+        </div>
+        <div>
+          <h2 className="font-bold text-gray-900 text-sm">Admin Console</h2>
+          <p className="text-xs text-amber-600 font-medium">Support Operations</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+        <nav className="space-y-1 px-3">
+          <button
+            onClick={() => setCurrentView('admin_dashboard')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'admin_dashboard'
+              ? 'bg-amber-50 text-amber-700 font-medium border border-amber-100'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            <LayoutDashboard className="h-5 w-5" />
+            <span className="text-sm">Overview</span>
+          </button>
+
+
+
+          <button
+            onClick={() => setCurrentView('admin_performance')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'admin_performance'
+              ? 'bg-amber-50 text-amber-700 font-medium border border-amber-100'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            <BarChart3 className="h-5 w-5" />
+            <span className="text-sm">Team Performance</span>
+          </button>
+
+          <div className="my-2 border-t border-gray-100 mx-2"></div>
+
+          <button
+            onClick={() => setCurrentView('admin_settings')}
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${currentView === 'admin_settings'
+              ? 'bg-amber-50 text-amber-700 font-medium border border-amber-100'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            <Settings className="h-5 w-5" />
+            <span className="text-sm">Settings</span>
+          </button>
+
+          <div className="my-2 border-t border-gray-100 mx-2"></div>
+
+          <div>
+            <button
+              onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all ${adminMenuOpen ? 'bg-gray-50 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-1 border border-gray-600 rounded-md">
+                  <Settings className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium">Admin</span>
+              </div>
+              {adminMenuOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+
+            {adminMenuOpen && (
+              <div className="pl-11 pr-2 mt-1 space-y-1 animate-in slide-in-from-top-2 fade-in duration-200">
+                <button
+                  onClick={() => setCurrentView('admin_invite')}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all ${currentView === 'admin_invite' ? 'text-amber-600 bg-amber-50 font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  <span className="text-sm">Invite User</span>
+                </button>
+                <button
+                  onClick={() => setCurrentView('admin_users')}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all ${currentView === 'admin_users' ? 'text-amber-600 bg-amber-50 font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm">User Management</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </nav>
+      </div>
+
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <button
+          onClick={async () => {
+            try {
+              await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('profileImage');
+            window.dispatchEvent(new Event('auth-change'));
+            router.push('/login');
+          }}
+          className="flex items-center justify-center w-full text-gray-600 hover:text-red-600 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-all text-sm font-medium group"
+        >
+          <LogOut className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+
   const renderProfile = () => (
     <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 p-6 overflow-y-auto">
       <div className="max-w-4xl mx-auto space-y-5">
@@ -808,15 +1417,15 @@ export default function AgentDashboard() {
 
             {/* Performance Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 hover:shadow-md transition-shadow">
+              <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 bg-blue-500 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-white" />
+                  <div className="p-1.5 bg-blue-100 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
                   </div>
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <TrendingUp className="h-4 w-4 text-gray-400" />
                 </div>
-                <div className="text-xs text-blue-700 font-medium mb-0.5">Cases Closed</div>
-                <div className="text-2xl font-bold text-blue-900">
+                <div className="text-xs text-gray-500 font-medium mb-0.5">Cases Closed</div>
+                <div className="text-2xl font-bold text-gray-900">
                   {isLoadingStats ? (
                     <span className="animate-pulse">...</span>
                   ) : (
@@ -825,15 +1434,15 @@ export default function AgentDashboard() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200 hover:shadow-md transition-shadow">
+              <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 bg-yellow-500 rounded-lg">
-                    <Award className="h-4 w-4 text-white" />
+                  <div className="p-1.5 bg-yellow-100 rounded-lg">
+                    <Award className="h-4 w-4 text-yellow-600" />
                   </div>
                   <span className="text-lg">⭐</span>
                 </div>
-                <div className="text-xs text-yellow-700 font-medium mb-0.5">Rating</div>
-                <div className="text-2xl font-bold text-yellow-900">
+                <div className="text-xs text-gray-500 font-medium mb-0.5">Rating</div>
+                <div className="text-2xl font-bold text-gray-900">
                   {isLoadingStats ? (
                     <span className="animate-pulse">...</span>
                   ) : (
@@ -842,15 +1451,15 @@ export default function AgentDashboard() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 hover:shadow-md transition-shadow">
+              <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 bg-green-500 rounded-lg">
-                    <Clock className="h-4 w-4 text-white" />
+                  <div className="p-1.5 bg-green-100 rounded-lg">
+                    <Clock className="h-4 w-4 text-green-600" />
                   </div>
-                  <TrendingUp className="h-4 w-4 text-green-600" />
+                  <TrendingUp className="h-4 w-4 text-gray-400" />
                 </div>
-                <div className="text-xs text-green-700 font-medium mb-0.5">Avg Response</div>
-                <div className="text-2xl font-bold text-green-900">
+                <div className="text-xs text-gray-500 font-medium mb-0.5">Avg Response</div>
+                <div className="text-2xl font-bold text-gray-900">
                   {isLoadingStats ? (
                     <span className="animate-pulse">...</span>
                   ) : (
@@ -859,15 +1468,15 @@ export default function AgentDashboard() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200 hover:shadow-md transition-shadow">
+              <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 bg-purple-500 rounded-lg">
-                    <Users className="h-4 w-4 text-white" />
+                  <div className="p-1.5 bg-purple-100 rounded-lg">
+                    <Users className="h-4 w-4 text-purple-600" />
                   </div>
-                  <BarChart3 className="h-4 w-4 text-purple-600" />
+                  <BarChart3 className="h-4 w-4 text-gray-400" />
                 </div>
-                <div className="text-xs text-purple-700 font-medium mb-0.5">Online Time</div>
-                <div className="text-2xl font-bold text-purple-900">
+                <div className="text-xs text-gray-500 font-medium mb-0.5">Online Time</div>
+                <div className="text-2xl font-bold text-gray-900">
                   {isLoadingStats ? (
                     <span className="animate-pulse">...</span>
                   ) : (
@@ -1211,7 +1820,7 @@ export default function AgentDashboard() {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <span className="text-sm font-mono text-purple-600 bg-purple-50 px-3 py-1 rounded-lg font-semibold">
+                            <span className="text-sm font-mono text-amber-600 bg-amber-50 px-3 py-1 rounded-lg font-semibold">
                               {ticket.ticket_id || `TICKET-${ticket.id}`}
                             </span>
                             <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
@@ -1231,9 +1840,9 @@ export default function AgentDashboard() {
                           {/* Issue Information */}
                           {ticket.issue_type_label && (
                             <div className="mt-3 flex items-start space-x-2">
-                              <div className="flex-shrink-0 w-1 h-10 bg-purple-300 rounded-full"></div>
+                              <div className="flex-shrink-0 w-1 h-10 bg-amber-300 rounded-full"></div>
                               <div className="flex-1 min-w-0">
-                                <span className="text-xs text-purple-600 flex-1 font-medium">{ticket.issue_type_label}</span>
+                                <span className="text-xs text-amber-600 flex-1 font-medium">{ticket.issue_type_label}</span>
                                 {ticket.issue_category_label && (
                                   <div className="mt-0.5">
                                     <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
@@ -1278,6 +1887,7 @@ export default function AgentDashboard() {
     );
   };
 
+
   // Show loading state while checking authentication
   if (isAuthChecking) {
     return (
@@ -1300,7 +1910,7 @@ export default function AgentDashboard() {
         />
       )}
 
-      {renderSidebar()}
+      {userRole === 'admin' ? renderAdminSidebar() : userRole === 'supervisor' ? renderSupervisorSidebar() : renderSidebar()}
 
       {currentView === 'chat' ? (
         <div className="flex-1 flex flex-col bg-white overflow-hidden">
@@ -1330,7 +1940,7 @@ export default function AgentDashboard() {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setShowQuickReplies(!showQuickReplies)}
-                    className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                    className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
                     title="Quick Replies"
                   >
                     <Zap className="h-5 w-5" />
@@ -1387,15 +1997,15 @@ export default function AgentDashboard() {
               <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white shadow-lg">
                 {/* Quick Replies Panel */}
                 {showQuickReplies && (
-                  <div className="mb-3 p-3 bg-purple-50 rounded-xl border border-purple-200 max-h-64 overflow-y-auto shadow-lg">
+                  <div className="mb-3 p-3 bg-amber-50 rounded-xl border border-amber-200 max-h-64 overflow-y-auto shadow-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-purple-900 flex items-center">
+                      <h4 className="text-sm font-semibold text-amber-900 flex items-center">
                         <Zap className="h-4 w-4 mr-1.5" />
                         Quick Replies
                       </h4>
                       <button
                         onClick={() => setShowQuickReplies(false)}
-                        className="text-purple-400 hover:text-purple-600"
+                        className="text-amber-400 hover:text-amber-600"
                       >
                         <CloseIcon className="h-4 w-4" />
                       </button>
@@ -1405,11 +2015,11 @@ export default function AgentDashboard() {
                         <button
                           key={reply.id}
                           onClick={() => handleQuickReply(reply.text)}
-                          className="text-left p-2 bg-white hover:bg-purple-100 rounded-lg transition-colors text-sm flex items-start space-x-2 border border-purple-100"
+                          className="text-left p-2 bg-white hover:bg-amber-100 rounded-lg transition-colors text-sm flex items-start space-x-2 border border-amber-100"
                         >
                           <span className="text-lg">{reply.icon}</span>
                           <div className="flex-1">
-                            <div className="text-xs text-purple-600 font-medium">{reply.category}</div>
+                            <div className="text-xs text-amber-600 font-medium">{reply.category}</div>
                             <div className="text-gray-700">{reply.text}</div>
                           </div>
                         </button>
@@ -1509,6 +2119,102 @@ export default function AgentDashboard() {
         renderProfile()
       ) : currentView === 'settings' ? (
         renderSettings()
+      ) : isAuthChecking ? (
+        // Should not happen as we handle this early return above
+        <div />
+      ) : currentView === 'admin_invite' && userRole === 'admin' ? (
+        <InviteUserView agentUsername={agentUsername} showNotification={(msg, type) => showNotification(msg, type || 'info')} onNavigate={(path) => router.push(path)} />
+      ) : currentView === 'admin_performance' && userRole === 'admin' ? (
+        <TeamPerformanceView />
+      ) : currentView === 'admin_settings' && userRole === 'admin' ? (
+        <AdminSettingsView />
+      ) : currentView === 'admin_users' && userRole === 'admin' ? (
+        <UserManagementView onNavigate={(view) => setCurrentView(view as View)} />
+      ) : currentView.startsWith('admin_') || userRole === 'admin' ? (
+        <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden overflow-y-auto">
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-gray-500">Overview of support operations</p>
+              </div>
+            </div>
+          </div>
+
+          {currentView === 'admin_dashboard' ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-start items-center mb-4 space-x-3">
+                  <div className="p-2 bg-amber-50 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-600">Total Tickets</h3>
+                </div>
+                <div className="text-3xl font-bold text-gray-900 pl-2">
+                  {isLoadingAdminStats ? (
+                    <div className="h-9 w-16 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    adminStats.total_tickets.toLocaleString()
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-start items-center mb-4 space-x-3">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <Headphones className="h-5 w-5 text-green-600" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-600">Active Agents</h3>
+                </div>
+                <div className="text-3xl font-bold text-gray-900 pl-2">
+                  {isLoadingAdminStats ? (
+                    <div className="h-9 w-8 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    adminStats.active_agents
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-start items-center mb-4 space-x-3">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-600">Avg Resolution</h3>
+                </div>
+                <div className="text-3xl font-bold text-gray-900 pl-2">
+                  {isLoadingAdminStats ? (
+                    <div className="h-9 w-24 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    adminStats.avg_resolution_time
+                  )}
+                </div>
+              </div>
+            </div>
+
+          ) : currentView === 'admin_performance' && userRole === 'admin' ? (
+            <TeamPerformanceView />
+          ) : currentView === 'admin_settings' && userRole === 'admin' ? (
+            <AdminSettingsView />
+          ) : currentView === 'supervisor_dashboard' ? (
+            <SupervisorDashboardView onNavigate={(view) => setCurrentView(view as View)} />
+          ) : currentView === 'supervisor_tickets' ? (
+            <AllTicketsView
+              onNavigate={(view, data) => {
+                if (view === 'chat' && data?.sessionId) {
+                  setSelectedSessionId(data.sessionId);
+                  setCurrentView('chat' as View);
+                } else {
+                  setCurrentView(view as View);
+                }
+              }}
+              userEmail={agentEmail}
+              userName={agentUsername}
+            />
+          ) : currentView === 'supervisor_team' ? (
+            <TeamPerformanceView />
+          ) : null}
+        </div>
       ) : (
         renderHistory()
       )}

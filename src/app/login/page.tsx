@@ -23,9 +23,9 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          email: username, 
-          password 
+        body: JSON.stringify({
+          email: username,
+          password
         }),
       });
 
@@ -38,10 +38,10 @@ export default function LoginPage() {
       // Store token and user data
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
+
       // Dispatch custom event to notify Header component about auth change
       window.dispatchEvent(new Event('auth-change'));
-      
+
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (err: any) {
@@ -60,7 +60,7 @@ export default function LoginPage() {
               <Lock className="h-8 w-8 text-gray-900" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900">ExtraHand</h2>
-            <p className="text-lg font-semibold text-amber-600 -mt-1">Support Agent Portal</p>
+            <p className="text-lg font-semibold text-amber-600 -mt-1">Ticket Management Portal</p>
             <p className="mt-2 text-sm text-gray-600">
               Please sign in to access the support dashboard
             </p>

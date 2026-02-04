@@ -36,13 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate Gmail only
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return NextResponse.json(
-        { error: 'Only Gmail addresses (@gmail.com) are allowed' },
-        { status: 400 }
-      );
-    }
+
 
     // Validate password strength
     if (!isStrongPassword(password)) {

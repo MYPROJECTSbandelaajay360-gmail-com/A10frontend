@@ -20,7 +20,10 @@ export default function KnowledgeBasePage() {
 
     const fetchArticles = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/articles');
+        const response = await fetch('http://localhost:8001/api/articles');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const result = await response.json();
         if (result.success) {
           setArticles(result.data);
@@ -35,6 +38,7 @@ export default function KnowledgeBasePage() {
     fetchArticles();
   }, [router]);
 
+  // ... (categories definitions skipped for brevity, they are unchanged) ...
   const categoriesSet = [
     { id: 'all', name: 'All Articles', icon: '📚' },
     { id: 'Understanding ExtraHand', name: 'Understanding ExtraHand', icon: '📖' },
@@ -81,28 +85,28 @@ export default function KnowledgeBasePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header with Navigation */}
-        <div className="mb-8">
+        <div className="mb-4">
           <button
             onClick={() => router.push('/dashboard')}
-            className="flex items-center text-amber-600 hover:text-amber-700 mb-4 font-medium transition-colors"
+            className="flex items-center text-amber-600 hover:text-amber-700 mb-2 font-medium transition-colors text-sm"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
             <span>Back to Dashboard</span>
           </button>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center space-x-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Book className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Book className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span>Knowledge Base</span>
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">Search articles, guides, and documentation to help customers</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Search articles, guides, and documentation to help customers</p>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -110,7 +114,7 @@ export default function KnowledgeBasePage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search articles, guides, or topics..."
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+              className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-sm"
             />
           </div>
         </div>

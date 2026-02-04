@@ -5,7 +5,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   passwordHash: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'supervisor';
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   emailVerified: boolean;
   emailVerificationToken?: string;
@@ -49,7 +49,7 @@ const UserSchema: Schema = new Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'admin', 'supervisor'],
       default: 'user',
     },
     status: {
@@ -108,12 +108,12 @@ const UserSchema: Schema = new Schema(
 );
 
 // Virtual for checking if account is locked
-UserSchema.virtual('isLocked').get(function(this: IUser) {
+UserSchema.virtual('isLocked').get(function (this: IUser) {
   return !!(this.lockUntil && this.lockUntil > new Date());
 });
 
 // Method to generate password reset token
-UserSchema.methods.createPasswordResetToken = function(this: IUser): string {
+UserSchema.methods.createPasswordResetToken = function (this: IUser): string {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
   this.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
@@ -121,7 +121,7 @@ UserSchema.methods.createPasswordResetToken = function(this: IUser): string {
 };
 
 // Method to generate email verification token
-UserSchema.methods.createEmailVerificationToken = function(this: IUser): string {
+UserSchema.methods.createEmailVerificationToken = function (this: IUser): string {
   const verifyToken = crypto.randomBytes(32).toString('hex');
   this.emailVerificationToken = crypto.createHash('sha256').update(verifyToken).digest('hex');
   this.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
@@ -129,7 +129,7 @@ UserSchema.methods.createEmailVerificationToken = function(this: IUser): string 
 };
 
 // Method to increment login attempts
-UserSchema.methods.incLoginAttempts = async function(this: IUser): Promise<void> {
+UserSchema.methods.incLoginAttempts = async function (this: IUser): Promise<void> {
   // If previous lock expired, restart attempts count
   if (this.lockUntil && this.lockUntil < new Date()) {
     await this.updateOne({
@@ -153,7 +153,7 @@ UserSchema.methods.incLoginAttempts = async function(this: IUser): Promise<void>
 };
 
 // Method to reset login attempts
-UserSchema.methods.resetLoginAttempts = async function(this: IUser): Promise<void> {
+UserSchema.methods.resetLoginAttempts = async function (this: IUser): Promise<void> {
   await this.updateOne({
     $set: { loginAttempts: 0 },
     $unset: { lockUntil: 1 },
