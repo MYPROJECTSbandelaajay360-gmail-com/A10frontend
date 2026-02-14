@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -17,35 +18,35 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 try {
-                    // Call backend API for authentication
-                    const res = await fetch('http://localhost:8001/api/auth/login', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            email: credentials.email,
-                            password: credentials.password
-                        }),
-                        headers: { "Content-Type": "application/json" }
+                    // Fetch user from database
+                    const user = await prisma.user.findUnique({
+                        where: { email: credentials.email },
+                        include: { employee: true }
                     })
 
-                    const data = await res.json()
-
-                    if (!res.ok) {
-                        throw new Error(data.error || 'Invalid credentials')
+                    if (!user) {
+                        throw new Error('Invalid credentials')
                     }
 
-                    // Backend returns: { token, user: { id, email, role, name, employeeId, image } }
-                    if (data.user) {
-                        return {
-                            id: data.user.id,
-                            email: data.user.email,
-                            role: data.user.role,
-                            name: data.user.name,
-                            employeeId: data.user.employeeId,
-                            image: data.user.image,
-                            accessToken: data.token // Store backend token if needed
-                        }
-                    } else {
-                        throw new Error('User data not found')
+                    // Verify password
+                    const isValid = await bcrypt.compare(credentials.password, user.password)
+
+                    if (!isValid) {
+                        throw new Error('Invalid credentials')
+                    }
+
+                    // Construct user object
+                    const name = user.employee
+                        ? `${user.employee.firstName} ${user.employee.lastName}`
+                        : user.email.split('@')[0]
+
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        role: user.role,
+                        name: name,
+                        employeeId: user.employee?.id,
+                        image: user.employee?.profileImage,
                     }
                 } catch (error: any) {
                     console.error('Login error:', error)
@@ -69,8 +70,25 @@ export const authOptions: NextAuthOptions = {
                 token.role = user.role
                 token.employeeId = user.employeeId
                 token.picture = user.image
-                token.accessToken = (user as any).accessToken // Cast to any because user type might not have accessToken defined in next-auth types
             }
+
+            // Always update/refresh the access token to prevent expiration (Sliding Window)
+            // Ensure we have the necessary user data before signing
+            if (token.id && token.email) {
+                const secret = process.env.NEXTAUTH_SECRET || 'your-secret-key';
+                // console.log('Refreshing access token for:', token.email); 
+                token.accessToken = jwt.sign(
+                    {
+                        id: token.id,
+                        email: token.email,
+                        role: token.role,
+                        employeeId: token.employeeId
+                    },
+                    secret,
+                    { expiresIn: '24h' }
+                )
+            }
+
             // Handle session update (e.g., after profile picture change)
             if (trigger === 'update' && session) {
                 if (session.user?.image !== undefined) {

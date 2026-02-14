@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ABC Company HRMS Theme */
+/* HRMS Theme */
 :root {
     /* Primary Colors */
     --primary-blue: #1E88E5;
@@ -400,7 +400,12 @@ p {
     position: fixed;
     left: 0;
     top: 0;
-    overflow-y: auto;
+    overflow: hidden;
+    /* Changed from overflow-y: auto */
+    display: flex;
+    /* Added */
+    flex-direction: column;
+    /* Added */
     z-index: 40;
     transition: transform 0.3s ease;
 }

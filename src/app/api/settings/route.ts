@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
         const session = await getServerSession(authOptions)
         // Note: Role check is done on backend too, but good to have here
         if (!session || !['ADMIN', 'CEO'].includes(session.user?.role || '') || !(session as any)?.accessToken) {
+            console.error('Frontend API Unauthorized: Missing session or accessToken', {
+                hasSession: !!session,
+                role: session?.user?.role,
+                hasToken: !!(session as any)?.accessToken
+            })
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
@@ -43,6 +48,20 @@ export async function POST(request: NextRequest) {
             },
             body: JSON.stringify(body)
         })
+
+        if (!res.ok) {
+            const errorText = await res.text()
+            console.error('Backend API Error:', {
+                status: res.status,
+                statusText: res.statusText,
+                body: errorText
+            })
+            try {
+                return NextResponse.json(JSON.parse(errorText), { status: res.status })
+            } catch (e) {
+                return NextResponse.json({ error: errorText }, { status: res.status })
+            }
+        }
 
         const data = await res.json()
         return NextResponse.json(data, { status: res.status })
