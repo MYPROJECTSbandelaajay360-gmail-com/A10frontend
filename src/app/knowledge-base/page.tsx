@@ -41,7 +41,7 @@ export default function KnowledgeBasePage() {
   // ... (categories definitions skipped for brevity, they are unchanged) ...
   const categoriesSet = [
     { id: 'all', name: 'All Articles', icon: '📚' },
-    { id: 'Understanding ExtraHand', name: 'Understanding ExtraHand', icon: '📖' },
+    { id: 'Getting Started', name: 'Getting Started', icon: '📖' },
     { id: 'Login/Account Management', name: 'Login/Account Management', icon: '👤' },
     { id: 'Payments & Refunds', name: 'Payments & Refunds', icon: '💳' },
     { id: 'Managing Tasks', name: 'Managing Tasks', icon: '📋' },

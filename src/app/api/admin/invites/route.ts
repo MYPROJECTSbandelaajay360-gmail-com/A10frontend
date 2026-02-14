@@ -3,6 +3,11 @@ import connectDB from '@/lib/db';
 import Invite from '@/models/Invite';
 import crypto from 'crypto';
 
+// Email service configuration
+const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL || 'http://localhost:4007';
+const SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN || 'HRMSPortal_Secure_Token_2024_MinLength32Chars';
+const WEB_APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010';
+
 export async function GET(request: NextRequest) {
     try {
         await connectDB();
@@ -55,8 +60,54 @@ export async function POST(request: NextRequest) {
             status: 'pending',
         });
 
-        // In a real application, you would send an email here with the link:
-        // https://your-domain.com/accept-invite?token=...
+        // Build invite link
+        const inviteLink = `${WEB_APP_URL}/accept-invite?token=${token}`;
+
+        // Call Email Service to send admin invite email
+        try {
+            const emailServiceUrl = `${EMAIL_SERVICE_URL}/api/v1/email/admin-invite`;
+
+            console.log('[NextAPI] Sending admin invite email via:', emailServiceUrl);
+
+            const emailResponse = await fetch(emailServiceUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Service-Auth': SERVICE_AUTH_TOKEN
+                },
+                body: JSON.stringify({
+                    email: email.toLowerCase(),
+                    role,
+                    inviteLink,
+                    expiresAt: expiresAt.toISOString(),
+                    team,
+                    department
+                })
+            });
+
+            if (!emailResponse.ok) {
+                const errorText = await emailResponse.text();
+                console.error('[NextAPI] Email service failed:', errorText);
+
+                // Rollback: delete the invite we just created so the user can try again
+                await Invite.findByIdAndDelete(newInvite._id);
+
+                return NextResponse.json(
+                    { error: `Failed to send invite email: ${errorText}` },
+                    { status: 500 }
+                );
+            } else {
+                console.log('[NextAPI] Admin invite email sent successfully');
+            }
+        } catch (emailError) {
+            console.error('[NextAPI] Failed to call email service:', emailError);
+            // Rollback on connection error too
+            await Invite.findByIdAndDelete(newInvite._id);
+            return NextResponse.json(
+                { error: 'Failed to connect to email service. Please ensure the email service is running.' },
+                { status: 502 }
+            );
+        }
 
         return NextResponse.json({
             message: 'Invite created successfully',

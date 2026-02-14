@@ -1,41 +1,51 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  // Get the pathname
-  const path = request.nextUrl.pathname;
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token
+    const pathname = req.nextUrl.pathname
 
-  // Define public paths that don't require authentication
-  const publicPaths = ['/login', '/signup', '/forgot-password', '/reset-password', '/'];
+    // Role-based access control
+    const roleAccess: Record<string, string[]> = {
+      '/settings': ['ADMIN', 'CEO'],
+      '/employees/add': ['HR', 'ADMIN', 'CEO'],
+      '/payroll/process': ['HR', 'ADMIN', 'CEO'],
+      '/leave/approvals': ['MANAGER', 'HR', 'ADMIN', 'CEO'],
+      '/attendance/team': ['MANAGER', 'HR', 'ADMIN', 'CEO'],
+      '/reports': ['HR', 'ADMIN', 'CEO'],
+    }
 
-  // Check if the path is public
-  const isPublicPath = publicPaths.some(publicPath => path.startsWith(publicPath));
+    // Check if the path requires specific roles
+    for (const [path, roles] of Object.entries(roleAccess)) {
+      if (pathname.startsWith(path)) {
+        const userRole = token?.role as string
+        if (!roles.includes(userRole)) {
+          return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
+      }
+    }
 
-  // Get token from cookies or Authorization header
-  const token = request.cookies.get('accessToken')?.value || 
-                request.headers.get('Authorization')?.replace('Bearer ', '');
-
-  // If trying to access protected route without token, redirect to login
-  if (!isPublicPath && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token
+    }
   }
+)
 
-  // If trying to access login page with token, redirect to dashboard
-  if (isPublicPath && token && path === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  return NextResponse.next();
-}
-
-// Configure which routes to run middleware on
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/profile/:path*',
+    '/attendance/:path*',
+    '/leave/:path*',
+    '/employees/:path*',
+    '/payroll/:path*',
+    '/holidays/:path*',
+    '/reports/:path*',
     '/settings/:path*',
-    '/history/:path*',
-    '/login',
-    '/signup'
+    '/profile/:path*',
+    '/notifications/:path*',
   ]
-};
+}
