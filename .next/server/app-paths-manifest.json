@@ -1,9 +1,13 @@
 {
+  "/api/notifications/route": "app/api/notifications/route.js",
+  "/api/leave/balance/route": "app/api/leave/balance/route.js",
+  "/api/leave/apply/route": "app/api/leave/apply/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
-  "/api/attendance/route": "app/api/attendance/route.js",
-  "/page": "app/page.js",
-  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
-  "/(dashboard)/attendance/page": "app/(dashboard)/attendance/page.js",
-  "/(dashboard)/settings/page": "app/(dashboard)/settings/page.js"
+  "/api/leave/approvals/route": "app/api/leave/approvals/route.js",
+  "/(dashboard)/leave/page": "app/(dashboard)/leave/page.js",
+  "/(dashboard)/leave/apply/page": "app/(dashboard)/leave/apply/page.js",
+  "/(dashboard)/notifications/page": "app/(dashboard)/notifications/page.js",
+  "/(dashboard)/leave/approvals/page": "app/(dashboard)/leave/approvals/page.js",
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js"
 }

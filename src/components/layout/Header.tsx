@@ -26,12 +26,25 @@ export default function Header() {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    const notifications = [
-        { id: 1, title: 'Leave Request Approved', message: 'Your leave request has been approved by HR', time: '5m ago', unread: true },
-        { id: 2, title: 'Salary Credited', message: 'Your salary for January has been credited to your account', time: '2h ago', unread: true },
-        { id: 3, title: 'Team Meeting', message: 'Team meeting scheduled at 3 PM in Conference Room A', time: '1d ago', unread: false },
-        { id: 4, title: 'Policy Update', message: 'New leave policy has been updated. Please review.', time: '2d ago', unread: false },
-    ]
+    const [notifications, setNotifications] = useState<any[]>([])
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const res = await fetch('/api/notifications')
+                if (res.ok) {
+                    const data = await res.json()
+                    setNotifications(data.notifications || [])
+                }
+            } catch (e) {
+                console.error("Failed to fetch notifications", e)
+            }
+        }
+        if (session) fetchNotifications()
+        // Poll every minute
+        const interval = setInterval(fetchNotifications, 60000)
+        return () => clearInterval(interval)
+    }, [session])
 
     const unreadCount = notifications.filter(n => n.unread).length
 

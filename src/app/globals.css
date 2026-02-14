@@ -391,58 +391,353 @@ p {
     background-color: var(--gray-50);
 }
 
-/* Sidebar */
+/* ====================== SIDEBAR PREMIUM DESIGN ====================== */
+
+/* Star twinkle animation */
+@keyframes starTwinkle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+@keyframes starTwinkle2 {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    30% {
+        opacity: 0.2;
+    }
+
+    70% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes nebulaShift {
+
+    0%,
+    100% {
+        opacity: 0.12;
+        transform: translateX(0) scale(1);
+    }
+
+    50% {
+        opacity: 0.2;
+        transform: translateX(5px) scale(1.05);
+    }
+}
+
+@keyframes sidebarGlow {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
 .sidebar {
     width: 260px;
     height: 100vh;
-    background: linear-gradient(180deg, var(--sidebar-bg) 0%, #152238 100%);
-    color: var(--sidebar-text);
+    /* Layer 1: Dark cinematic gradient — matches reference image */
+    background:
+        linear-gradient(180deg,
+            #0f172a 0%,
+            #111d35 10%,
+            #152240 22%,
+            #1a2d55 35%,
+            #1e3a6e 48%,
+            #1a2d55 60%,
+            #13203d 72%,
+            #0e1628 84%,
+            #0b1120 92%,
+            #060a14 100%);
+    color: #e2e8f0;
     position: fixed;
     left: 0;
     top: 0;
     overflow: hidden;
-    /* Changed from overflow-y: auto */
     display: flex;
-    /* Added */
     flex-direction: column;
-    /* Added */
     z-index: 40;
     transition: transform 0.3s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.sidebar-nav-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    margin: 0.25rem 0.75rem;
-    font-size: 0.875rem;
-    color: var(--gray-300);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    gap: 0.75rem;
+/* Layer 2: Subtle atmospheric teal glow — diffused, not bright */
+.sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        /* Soft diffused teal atmosphere in middle region */
+        radial-gradient(ellipse 200px 300px at 35% 45%, rgba(56, 189, 248, 0.08) 0%, transparent 70%),
+        /* Very faint secondary fill glow */
+        radial-gradient(ellipse 180px 250px at 65% 40%, rgba(30, 64, 175, 0.06) 0%, transparent 65%),
+        /* Barely-there ambient highlight top area */
+        radial-gradient(circle at 20% 12%, rgba(56, 189, 248, 0.03) 0%, transparent 35%);
+    pointer-events: none;
+    z-index: 0;
 }
 
-.sidebar-nav-item:hover {
-    background-color: var(--sidebar-hover);
-    color: white;
-}
-
-.sidebar-nav-item.active {
-    background-color: var(--sidebar-active);
-    color: var(--accent-green);
-    font-weight: 500;
-}
-
-.sidebar-nav-item.active::before {
+/* Layer 3: Bottom galaxy — smooth dark fade + stars + nebula */
+.sidebar::after {
     content: '';
     position: absolute;
     left: 0;
-    width: 3px;
-    height: 100%;
-    background-color: var(--accent-green);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    right: 0;
+    bottom: 0;
+    height: 30%;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        /* Smooth dark fade — blends into base gradient, no hard edge */
+        linear-gradient(180deg, transparent 0%, rgba(6, 10, 20, 0.4) 25%, rgba(6, 10, 20, 0.7) 60%, rgba(6, 10, 20, 0.85) 100%),
+        /* Star particles */
+        radial-gradient(1px 1px at 15% 35%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 42% 28%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 78% 22%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 58%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 45%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 72%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 82%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 88%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 92% 68%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 48% 92%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+        /* Star cluster bottom-left — like reference */
+        radial-gradient(1px 1px at 8% 75%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 14% 84%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+        radial-gradient(1px 1px at 10% 90%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 87%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5% 94%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+        /* Curved nebula streak — faint bluish-white arc */
+        radial-gradient(ellipse 160px 15px at 35% 82%, rgba(180, 210, 255, 0.06) 0%, transparent 70%),
+        /* Soft bottom-left radial glow */
+        radial-gradient(ellipse 120px 110px at 10% 92%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+        /* Gentle nebula haze — barely visible */
+        radial-gradient(ellipse 130px 40px at 60% 78%, rgba(56, 189, 248, 0.025) 0%, transparent 60%);
+    animation: starTwinkle 5s ease-in-out infinite;
 }
+
+/* Second star layer for depth + parallax */
+.sidebar-galaxy-stars {
+    position: absolute !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30%;
+    pointer-events: none;
+    z-index: 0 !important;
+    background:
+        radial-gradient(1px 1px at 28% 32%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 48%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 38%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 42% 72%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 65%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 62%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 85%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 38% 92%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+        /* Faint nebula swatch — bottom accent */
+        radial-gradient(ellipse 60px 30px at 28% 90%, rgba(56, 189, 248, 0.03) 0%, transparent 55%);
+    animation: starTwinkle2 6.5s ease-in-out infinite;
+}
+
+/* Ensure all sidebar children sit above the pseudo-elements */
+.sidebar>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* Logo Section */
+.sidebar-logo {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 4px 12px rgba(29, 78, 216, 0.3),
+        0 0 20px rgba(14, 165, 233, 0.2);
+    flex-shrink: 0;
+}
+
+.sidebar-logo-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.025em;
+}
+
+/* Menu Label */
+.sidebar-menu-label {
+    padding: 1rem 1.5rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Nav Section Scrollbar */
+.sidebar nav::-webkit-scrollbar {
+    width: 3px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Nav Item Base */
+.sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    margin: 2px 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 450;
+    color: #cbd5e1;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 0.75rem;
+    position: relative;
+    border: 1px solid transparent;
+    text-decoration: none;
+}
+
+/* Icon styling inside nav items */
+.sidebar-nav-item svg {
+    flex-shrink: 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #93c5fd;
+    opacity: 0.8;
+}
+
+/* Hover State */
+.sidebar-nav-item:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.04);
+    transform: translateX(4px);
+}
+
+.sidebar-nav-item:hover svg {
+    opacity: 1;
+    color: #bfdbfe;
+}
+
+/* Active State */
+.sidebar-nav-item.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-weight: 550;
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.08);
+}
+
+.sidebar-nav-item.active svg {
+    opacity: 1;
+    color: #38bdf8;
+}
+
+/* Active Indicator Bar - left border glow */
+.sidebar-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: #38bdf8;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.5), 0 0 16px rgba(56, 189, 248, 0.2);
+    animation: sidebarGlow 2.5s ease-in-out infinite;
+}
+
+/* Children / Sub-menu */
+.sidebar-children {
+    margin-left: 1.25rem;
+    margin-top: 2px;
+    padding-left: 0.75rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Chevron Icons */
+.sidebar-chevron {
+    margin-left: auto;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.5;
+}
+
+/* Footer Section */
+.sidebar-footer {
+    padding: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+}
+
+/* Notification Badge */
+.sidebar-notification-badge {
+    margin-left: auto;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    min-width: 20px;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), 0 0 16px rgba(239, 68, 68, 0.15);
+    animation: sidebarGlow 2s ease-in-out infinite;
+}
+
+/* Logout specific styling */
+.sidebar-logout {
+    color: #fca5a5 !important;
+}
+
+.sidebar-logout:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #fecaca !important;
+    border-color: rgba(239, 68, 68, 0.1) !important;
+}
+
 
 /* Page Layout */
 .page-container {

@@ -1,70 +1,81 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import User from '@/models/User';
 import connectDB from '@/lib/db';
-import Invite from '@/models/Invite';
 
-export async function DELETE(
-    request: Request,
+// GET single user
+export async function GET(
+    request: NextRequest,
     props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
+    await connectDB();
     try {
-        const params = await props.params;
-        const id = params.id;
+        const user = await User.findById(params.id).select('-passwordHash');
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+        return NextResponse.json({ user });
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
+    }
+}
 
-        // 1. Delete from Frontend DB (Next.js)
-        await connectDB();
+// UPDATE user (Role, Status, etc.)
+export async function PUT(
+    request: NextRequest,
+    props: { params: Promise<{ id: string }> }
+) {
+    const params = await props.params;
+    await connectDB();
+    try {
+        const body = await request.json();
+        const { role, status } = body;
 
-        // Find by ID and delete. We use findByIdAndDelete.
-        // Assuming 'Invite' model uses _id matching the 'id' param.
-        const deletedInvite = await Invite.findByIdAndDelete(id);
-
-        // 2. Delete from Backend Server (Express) - User Deletion
-        // The Invite ID (Mongo) might not match Backend User ID.
-        // We try to find the backend user by email first if we have the invite info.
-        try {
-            let backendIdToDelete = id; // Default to trying the same ID
-
-            if (deletedInvite && deletedInvite.email) {
-                // Fetch all users from backend to find the correct ID
-                // Ideally backend should have a delete-by-email or get-by-email endpoint
-                const usersResponse = await fetch('http://localhost:8001/api/admin/users');
-                if (usersResponse.ok) {
-                    const data = await usersResponse.json();
-                    const backendUser = data.users.find((u: any) => u.email === deletedInvite.email);
-                    if (backendUser) {
-                        backendIdToDelete = backendUser._id || backendUser.id;
-                        console.log(`[NextAPI] Found backend user for ${deletedInvite.email}: ${backendIdToDelete}`);
-                    }
-                }
-            }
-
-            const response = await fetch(`http://localhost:8001/api/admin/users/${backendIdToDelete}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            // We don't return error if backend fails, strictly speaking, to allow UI cleanup
-            if (!response.ok) {
-                console.warn('Backend user deletion check returned:', response.status);
-            } else {
-                console.log('[NextAPI] Backend user deleted successfully');
-            }
-        } catch (backendError) {
-            console.warn('Backend connection failed during delete:', backendError);
+        // Validation
+        if (role && !['user', 'admin', 'supervisor'].includes(role)) {
+            return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+        }
+        if (status && !['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status)) {
+            return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
 
-        if (!deletedInvite) {
-            // Even if not found, we return 200 to allow UI to clear it? 
-            // Or 404. Let's return 200 with message if it was "already gone".
-            return NextResponse.json({ success: true, message: 'Invite deleted (or already gone)' });
+        const updatedUser = await User.findByIdAndUpdate(
+            params.id,
+            {
+                ...(role && { role }),
+                ...(status && { status }),
+            },
+            { new: true }
+        ).select('-passwordHash');
+
+        if (!updatedUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, message: 'Invite revoked' });
+        return NextResponse.json({ user: updatedUser });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    }
+}
+
+// DELETE user
+export async function DELETE(
+    request: NextRequest,
+    props: { params: Promise<{ id: string }> }
+) {
+    const params = await props.params;
+    await connectDB();
+    try {
+        const deletedUser = await User.findByIdAndDelete(params.id);
+
+        if (!deletedUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
         console.error('Error deleting user:', error);
-        return NextResponse.json(
-            { error: 'Internal Server Error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
     }
 }

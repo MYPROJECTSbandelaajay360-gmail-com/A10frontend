@@ -54,7 +54,7 @@ export default function ApplyLeavePage() {
         setError(null)
         try {
             const token = (session as any)?.accessToken
-            const res = await fetch('http://127.0.0.1:8001/api/leave/balance', {
+            const res = await fetch('/api/leave/balance', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             if (res.ok) {
@@ -109,7 +109,7 @@ export default function ApplyLeavePage() {
         setLoading(true)
         try {
             const token = (session as any)?.accessToken
-            const res = await fetch('http://127.0.0.1:8001/api/leave/apply', {
+            const res = await fetch('/api/leave/apply', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

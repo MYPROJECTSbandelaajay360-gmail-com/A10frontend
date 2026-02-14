@@ -101,7 +101,7 @@ export default function LeavePage() {
             const headers = { 'Authorization': `Bearer ${token}` }
 
             // Fetch Balances
-            const balanceRes = await fetch('http://127.0.0.1:8001/api/leave/balance', { headers })
+            const balanceRes = await fetch('/api/leave/balance', { headers })
             if (balanceRes.ok) {
                 const json = await balanceRes.json()
                 setLeaveBalances(json.data)
@@ -111,7 +111,8 @@ export default function LeavePage() {
 
             // Fetch Requests (assuming /api/leave returns user's request history)
             // Added year=2026 or just current year logic if needed, but endpoint defaults to current year usually
-            const requestsRes = await fetch('http://127.0.0.1:8001/api/leave', { headers })
+            // Fetch Requests
+            const requestsRes = await fetch('/api/leave/apply', { headers })
             if (requestsRes.ok) {
                 const json = await requestsRes.json()
                 setLeaveRequests(json.data)

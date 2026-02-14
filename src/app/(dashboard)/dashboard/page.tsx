@@ -194,45 +194,47 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Pending Leave Requests */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">Pending Leave Requests</h2>
-                            <Link href="/leave/approvals" className="text-blue-600 text-sm font-semibold flex items-center gap-1 hover:underline">
-                                View all <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                        <div className="space-y-4">
-                            {loading ? (
-                                <p className="text-gray-500 text-sm text-center py-4">Loading requests...</p>
-                            ) : pendingLeaves.length === 0 ? (
-                                <p className="text-gray-500 text-sm text-center py-4">No pending requests.</p>
-                            ) : (
-                                pendingLeaves.map((leave) => (
-                                    <div key={leave.id} className="flex items-center justify-between py-2">
-                                        <div className="flex items-center gap-4">
-                                            {leave.image ? (
-                                                <img src={leave.image} alt={leave.name} className="w-10 h-10 rounded-full object-cover" />
-                                            ) : (
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${leave.color}`}>
-                                                    {leave.initials}
+                    {/* Pending Leave Requests - Admin Only */}
+                    {(session?.user?.role === 'admin' || session?.user?.role === 'manager') && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-gray-900">Pending Leave Requests</h2>
+                                <Link href="/leave/approvals" className="text-blue-600 text-sm font-semibold flex items-center gap-1 hover:underline">
+                                    View all <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
+                            <div className="space-y-4">
+                                {loading ? (
+                                    <p className="text-gray-500 text-sm text-center py-4">Loading requests...</p>
+                                ) : pendingLeaves.length === 0 ? (
+                                    <p className="text-gray-500 text-sm text-center py-4">No pending requests.</p>
+                                ) : (
+                                    pendingLeaves.map((leave) => (
+                                        <div key={leave.id} className="flex items-center justify-between py-2">
+                                            <div className="flex items-center gap-4">
+                                                {leave.image ? (
+                                                    <img src={leave.image} alt={leave.name} className="w-10 h-10 rounded-full object-cover" />
+                                                ) : (
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${leave.color}`}>
+                                                        {leave.initials}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <p className="font-bold text-gray-900">{leave.name}</p>
+                                                    <p className="text-sm text-gray-500">{leave.type} • {leave.days} day(s)</p>
                                                 </div>
-                                            )}
-                                            <div>
-                                                <p className="font-bold text-gray-900">{leave.name}</p>
-                                                <p className="text-sm text-gray-500">{leave.type} • {leave.days} day(s)</p>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <Link href={`/leave/approvals`} className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors">
+                                                    <ArrowRight className="w-5 h-5" />
+                                                </Link>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3">
-                                            <Link href={`/leave/approvals`} className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors">
-                                                <ArrowRight className="w-5 h-5" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                 </div>
 

@@ -1,5 +1,15 @@
 {
   "pages": {
+    "/api/settings/leave-types/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/settings/leave-types/route.js"
+    ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -36,15 +46,65 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/dashboard/page.js"
     ],
-    "/api/auth/[...nextauth]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/[...nextauth]/route.js"
-    ],
     "/api/dashboard/stats/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/dashboard/stats/route.js"
+    ],
+    "/(dashboard)/settings/leave-types/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/settings/leave-types/page.js"
+    ],
+    "/api/leave/balance/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/leave/balance/route.js"
+    ],
+    "/api/leave/apply/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/leave/apply/route.js"
+    ],
+    "/(dashboard)/leave/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/leave/page.js"
+    ],
+    "/(dashboard)/leave/apply/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/leave/apply/page.js"
+    ],
+    "/(dashboard)/notifications/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/notifications/page.js"
+    ],
+    "/api/notifications/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/notifications/route.js"
+    ],
+    "/(dashboard)/leave/approvals/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/leave/approvals/page.js"
+    ],
+    "/api/leave/approvals/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/leave/approvals/route.js"
+    ],
+    "/api/leave/approvals/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/leave/approvals/[id]/route.js"
+    ],
+    "/api/debug/fix-user/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/debug/fix-user/route.js"
     ],
     "/(dashboard)/attendance/page": [
       "static/chunks/webpack.js",
@@ -55,16 +115,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/attendance/route.js"
-    ],
-    "/(dashboard)/settings/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/settings/page.js"
-    ],
-    "/api/settings/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/settings/route.js"
     ]
   }
 }
