@@ -1,4 +1,4 @@
-// File: F:\A10\A10Frontend\AttendenceFrontend\src\app\(dashboard)\dashboard\page.tsx
+// File: F:\A10\A10Frontend\src\app\(dashboard)\dashboard\page.tsx
 import * as entry from '../../../../../src/app/(dashboard)/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

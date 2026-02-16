@@ -28,6 +28,7 @@ model User {
   auditLogs       AuditLog[]
   sessions        Session[]
   accounts        Account[]
+  announcements   Announcement[]
   
   @@index([role])
   @@index([status])
@@ -627,4 +628,33 @@ model SystemSetting {
   updatedAt       DateTime  @updatedAt
   
   @@index([category])
+}
+
+// ==================== ANNOUNCEMENTS ====================
+
+model Announcement {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  content         String
+  category        String
+  priority        String?
+  
+  authorId        String    @db.ObjectId
+  
+  expirationDate  DateTime?
+  publishedAt     DateTime  @default(now())
+  
+  attachmentName  String?
+  attachmentUrl   String?
+  attachmentSize  String?
+
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  author          User      @relation(fields: [authorId], references: [id])
+  
+  @@index([authorId])
+  @@index([category])
+  @@index([isActive])
 }

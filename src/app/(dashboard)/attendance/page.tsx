@@ -22,7 +22,10 @@ import {
     AlertTriangle,
     Coffee,
     Zap,
-    Activity
+    Activity,
+    Home,
+    Building2,
+    CalendarCheck
 } from 'lucide-react'
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -118,6 +121,68 @@ export default function AttendancePage() {
     const [showPendingWarning, setShowPendingWarning] = useState(true)
     const [mounted, setMounted] = useState(false)
 
+    // WFH State
+    const [workMode, setWorkMode] = useState<'OFFICE' | 'WFH'>('OFFICE')
+    const [isWFHModalOpen, setIsWFHModalOpen] = useState(false)
+    const [wfhReason, setWfhReason] = useState('')
+    const [wfhDate, setWfhDate] = useState(new Date().toISOString().split('T')[0])
+    const [isSubmittingWFH, setIsSubmittingWFH] = useState(false)
+    const [myWFHRequests, setMyWFHRequests] = useState<any[]>([])
+
+    // Fetch WFH requests
+    const fetchWFHRequests = useCallback(async () => {
+        try {
+            const res = await fetch('/api/wfh/my-requests')
+            if (res.ok) {
+                const data = await res.json()
+                setMyWFHRequests(data)
+
+                // Check if today is approved WFH
+                const todayStr = new Date().toISOString().split('T')[0]
+                const todayRequest = data.find((r: any) =>
+                    new Date(r.date).toISOString().split('T')[0] === todayStr && r.status === 'APPROVED'
+                )
+                if (todayRequest) {
+                    setWorkMode('WFH')
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch WFH requests', error)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (session?.user) {
+            fetchWFHRequests()
+        }
+    }, [session, fetchWFHRequests])
+
+    const handleWFHSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsSubmittingWFH(true)
+        setMessage(null)
+        try {
+            const res = await fetch('/api/wfh/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: wfhDate, reason: wfhReason })
+            })
+            const data = await res.json()
+            if (res.ok) {
+                setMessage({ type: 'success', text: 'WFH Request submitted successfully' })
+                setIsWFHModalOpen(false)
+                setWfhReason('')
+                fetchWFHRequests()
+            } else {
+                setMessage({ type: 'error', text: data.error || 'Failed to submit request' })
+            }
+        } catch {
+            setMessage({ type: 'error', text: 'Failed to submit request' })
+        } finally {
+            setIsSubmittingWFH(false)
+        }
+    }
+
     // Mount animation trigger
     useEffect(() => {
         setMounted(true)
@@ -203,6 +268,8 @@ export default function AttendancePage() {
 
     // Get user's location
     useEffect(() => {
+        if (!officeConfig || !officeConfig.latitude || !officeConfig.longitude) return;
+
         if (navigator.geolocation) {
             setLocationStatus('checking')
             navigator.geolocation.getCurrentPosition(
@@ -211,6 +278,7 @@ export default function AttendancePage() {
                     setLocation({ latitude, longitude })
 
                     const distance = calculateDistance(latitude, longitude, officeConfig.latitude, officeConfig.longitude)
+                    // Strict check: if distance > radius, it is INVALID
                     if (distance <= officeConfig.radius) {
                         setLocationStatus('valid')
                         setLocationError(null)
@@ -219,14 +287,15 @@ export default function AttendancePage() {
                         setLocationError(`You are ${Math.round(distance)}m away from office (max ${officeConfig.radius}m)`)
                     }
                 },
-                () => {
-                    setLocationStatus('unknown')
-                    setLocationError('Location access denied. Using WiFi verification only.')
+                (error) => {
+                    console.error('Geolocation error:', error)
+                    setLocationStatus('invalid') // Default to invalid if we can't get location, let backend IP check handle it
+                    setLocationError('Location access denied or failed.')
                 }
             )
         } else {
             setLocationStatus('unknown')
-            setLocationError('Geolocation not supported. Using WiFi verification only.')
+            setLocationError('Geolocation not supported.')
         }
     }, [officeConfig])
 
@@ -244,7 +313,8 @@ export default function AttendancePage() {
                 body: JSON.stringify({
                     action: 'check-in',
                     latitude: location?.latitude,
-                    longitude: location?.longitude
+                    longitude: location?.longitude,
+                    workMode // 'OFFICE' | 'WFH'
                 })
             })
             const data = await response.json()
@@ -339,23 +409,37 @@ export default function AttendancePage() {
                     <p className="text-gray-500 mt-0.5 text-sm">Track your daily attendance and working hours</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* Location Badge */}
-                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${locationStatus === 'valid'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : locationStatus === 'invalid'
-                            ? 'bg-red-50 text-red-700 border-red-200'
-                            : locationStatus === 'checking'
-                                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                : 'bg-gray-50 text-gray-600 border-gray-200'
-                        }`}>
-                        {locationStatus === 'valid' ? <Wifi className="w-3 h-3" /> :
-                            locationStatus === 'invalid' ? <WifiOff className="w-3 h-3" /> :
-                                locationStatus === 'checking' ? <Loader2 className="w-3 h-3 animate-spin" /> :
-                                    <MapPin className="w-3 h-3" />}
-                        {locationStatus === 'valid' ? 'In Office' :
-                            locationStatus === 'invalid' ? 'Outside Office' :
-                                locationStatus === 'checking' ? 'Locating...' : officeConfig.name}
-                    </div>
+                    <button
+                        onClick={() => setIsWFHModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-full transition-all"
+                    >
+                        <Home className="w-3 h-3" />
+                        Request WFH
+                    </button>
+                    {/* Location/Work Mode Badge */}
+                    {workMode === 'WFH' ? (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            <Home className="w-3 h-3" />
+                            WFH Mode
+                        </div>
+                    ) : (
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${locationStatus === 'valid'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : locationStatus === 'invalid'
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : locationStatus === 'checking'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : 'bg-gray-50 text-gray-600 border-gray-200'
+                            }`}>
+                            {locationStatus === 'valid' ? <Wifi className="w-3 h-3" /> :
+                                locationStatus === 'invalid' ? <WifiOff className="w-3 h-3" /> :
+                                    locationStatus === 'checking' ? <Loader2 className="w-3 h-3 animate-spin" /> :
+                                        <MapPin className="w-3 h-3" />}
+                            {locationStatus === 'valid' ? 'In Office' :
+                                locationStatus === 'invalid' ? 'Outside Office' :
+                                    locationStatus === 'checking' ? 'Locating...' : officeConfig.name}
+                        </div>
+                    )}
                     <button
                         onClick={fetchAttendance}
                         disabled={fetchingData}
@@ -473,6 +557,26 @@ export default function AttendancePage() {
 
                         {/* Right: Check In/Out Button */}
                         <div className="flex flex-col items-center gap-2">
+                            {/* Work Mode Toggle (Only if NOT checked in) */}
+                            {!isCheckedIn && !isFullyDone && (
+                                <div className="flex p-1 bg-gray-100 rounded-lg mb-2">
+                                    <button
+                                        onClick={() => setWorkMode('OFFICE')}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${workMode === 'OFFICE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                    >
+                                        <Building2 className="w-3.5 h-3.5" /> Office
+                                    </button>
+                                    <button
+                                        onClick={() => setWorkMode('WFH')}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${workMode === 'WFH' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                    >
+                                        <Home className="w-3.5 h-3.5" /> WFH
+                                    </button>
+                                </div>
+                            )}
+
                             {!isFullyDone && (
                                 <>
                                     {!isCheckedIn ? (
@@ -524,61 +628,61 @@ export default function AttendancePage() {
             {/* ═══════════════ STATS SECTION ═══════════════ */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* Circular Progress */}
-                <div className={`col-span-2 lg:col-span-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center justify-center transition-all duration-500 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <CircularProgress percentage={attendancePercentage} />
-                    <p className="text-xs text-gray-500 mt-2 font-medium">
+                <div className={`col-span-2 lg:col-span-1 bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col items-center justify-center transition-all duration-500 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <CircularProgress percentage={attendancePercentage} size={85} strokeWidth={8} />
+                    <p className="text-[10px] text-gray-500 mt-1 font-medium">
                         {stats.presentDays}/{stats.presentDays + stats.absentDays} days
                     </p>
                 </div>
 
                 {/* Present Days */}
-                <div className={`group bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 flex items-center justify-center border border-emerald-200/50">
-                            <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div className={`group bg-white rounded-xl border border-gray-100 shadow-sm p-2.5 hover:shadow-md transition-all duration-300 delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-50 to-green-100 flex items-center justify-center border border-emerald-200/50">
+                            <CheckCircle className="w-4 h-4 text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.presentDays}</p>
-                            <p className="text-[11px] text-gray-500 font-medium">Present</p>
+                            <p className="text-xl font-bold text-gray-900 leading-none">{stats.presentDays}</p>
+                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">Present</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Absent Days */}
-                <div className={`group bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center border border-red-200/50">
-                            <XCircle className="w-5 h-5 text-red-600" />
+                <div className={`group bg-white rounded-xl border border-gray-100 shadow-sm p-2.5 hover:shadow-md transition-all duration-300 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center border border-red-200/50">
+                            <XCircle className="w-4 h-4 text-red-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.absentDays}</p>
-                            <p className="text-[11px] text-gray-500 font-medium">Absent</p>
+                            <p className="text-xl font-bold text-gray-900 leading-none">{stats.absentDays}</p>
+                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">Absent</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Leave Days */}
-                <div className={`group bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 delay-250 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-50 to-blue-100 flex items-center justify-center border border-sky-200/50">
-                            <Calendar className="w-5 h-5 text-sky-600" />
+                <div className={`group bg-white rounded-xl border border-gray-100 shadow-sm p-2.5 hover:shadow-md transition-all duration-300 delay-250 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-50 to-blue-100 flex items-center justify-center border border-sky-200/50">
+                            <Calendar className="w-4 h-4 text-sky-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.leaveDays}</p>
-                            <p className="text-[11px] text-gray-500 font-medium">On Leave</p>
+                            <p className="text-xl font-bold text-gray-900 leading-none">{stats.leaveDays}</p>
+                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">On Leave</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Total Hours */}
-                <div className={`group bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center border border-violet-200/50">
-                            <Activity className="w-5 h-5 text-violet-600" />
+                <div className={`group bg-white rounded-xl border border-gray-100 shadow-sm p-2.5 hover:shadow-md transition-all duration-300 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center border border-violet-200/50">
+                            <Activity className="w-4 h-4 text-violet-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-gray-900">{stats.totalHours.toFixed(1)}<span className="text-sm font-medium text-gray-400 ml-0.5">h</span></p>
-                            <p className="text-[11px] text-gray-500 font-medium">Total Hours</p>
+                            <p className="text-xl font-bold text-gray-900 leading-none">{stats.totalHours.toFixed(1)}<span className="text-[10px] font-medium text-gray-400 ml-0.5">h</span></p>
+                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">Total Hours</p>
                         </div>
                     </div>
                 </div>
@@ -692,6 +796,68 @@ export default function AttendancePage() {
                     </table>
                 </div>
             </div>
+
+            {/* WFH Request Modal */}
+            {isWFHModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
+                            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                <Home className="w-4 h-4 text-blue-600" />
+                                Request Work From Home
+                            </h3>
+                            <button
+                                onClick={() => setIsWFHModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleWFHSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={wfhDate}
+                                    onChange={(e) => setWfhDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                                <textarea
+                                    required
+                                    value={wfhReason}
+                                    onChange={(e) => setWfhReason(e.target.value)}
+                                    placeholder="Why do you need to work from home?"
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[100px]"
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsWFHModalOpen(false)}
+                                    disabled={isSubmittingWFH}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingWFH}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isSubmittingWFH ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                    Submit Request
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

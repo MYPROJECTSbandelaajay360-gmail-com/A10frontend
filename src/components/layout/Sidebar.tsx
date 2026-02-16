@@ -24,7 +24,8 @@ import {
     ChevronRight,
     Menu,
     X,
-    Zap
+    Zap,
+    Megaphone
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -37,7 +38,15 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+        children: [
+            { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+            { name: 'Virtual Office', href: '/dashboard/virtual-office', icon: Building2 },
+        ]
+    },
     {
         name: 'Employees',
         href: '/employees',
@@ -90,6 +99,11 @@ const navigation: NavItem[] = [
         href: '/reports',
         icon: BarChart3,
         roles: ['HR', 'ADMIN']
+    },
+    {
+        name: 'Announcements',
+        href: '/announcements',
+        icon: Megaphone
     },
     {
         name: 'Settings',

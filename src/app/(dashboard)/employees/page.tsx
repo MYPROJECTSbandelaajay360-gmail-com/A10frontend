@@ -37,7 +37,7 @@ interface Employee {
     designation: string
     joiningDate: string
     status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
-    avatar?: string
+    profileImage?: string
 }
 
 interface EmployeeInvite {
@@ -408,9 +408,17 @@ export default function EmployeesPage() {
                                         <tr key={employee.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
-                                                        {getInitials(employee.name)}
-                                                    </div>
+                                                    {employee.profileImage ? (
+                                                        <img
+                                                            src={employee.profileImage}
+                                                            alt={employee.name}
+                                                            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
+                                                            {getInitials(employee.name)}
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <p className="font-semibold text-gray-900">{employee.name}</p>
                                                         <p className="text-xs text-gray-500">{employee.employeeId}</p>

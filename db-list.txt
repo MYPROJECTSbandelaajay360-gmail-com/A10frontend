@@ -1,0 +1,223 @@
+﻿node.exe : 
+(node:25008) [MODULE_
+TYPELESS_PACKAGE_JSON
+] Warning: Module 
+type of file:///F:/A1
+0/A10Frontend/inspect
+-db.ts is not 
+specified and it 
+doesn't parse as 
+CommonJS.
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ((node:2   
+ 5008) [M...se as    
+ CommonJS.:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Reparsing as ES 
+module because 
+module syntax was 
+detected. This 
+incurs a performance 
+overhead.
+To eliminate this 
+warning, add "type": 
+"module" to F:\A10\A1
+0Frontend\package.jso
+n.
+(Use `node 
+--trace-warnings 
+...` to show where 
+the warning was 
+created)
+--- DEPARTMENTS ---
+[
+  {
+    "id": "6988cf2f1a679e6078340478",
+    "name": "Engineering",
+    "code": "ENG",
+    "description": "Software Development & Engineering",
+    "managerId": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:14.924Z",
+    "updatedAt": "2026-02-08T18:00:14.924Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340479",
+    "name": "Finance",
+    "code": "FIN",
+    "description": "Finance & Accounting",
+    "managerId": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:14.923Z",
+    "updatedAt": "2026-02-08T18:00:14.923Z"
+  },
+  {
+    "id": "6988cf2f1a679e607834047d",
+    "name": "Sales",
+    "code": "SAL",
+    "description": "Sales & Business Development",
+    "managerId": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:14.923Z",
+    "updatedAt": "2026-02-08T18:00:14.923Z"
+  },
+  {
+    "id": "6988cf2f1a679e607834047c",
+    "name": "Marketing",
+    "code": "MKT",
+    "description": "Marketing & Communications",
+    "managerId": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:14.923Z",
+    "updatedAt": "2026-02-08T18:00:14.923Z"
+  },
+  {
+    "id": "6988cf2f1a679e607834047b",
+    "name": "Operations",
+    "code": "OPS",
+    "description": "Operations & Support",
+    "managerId": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:14.923Z",
+    "updatedAt": "2026-02-08T18:00:14.923Z"
+  },
+  {
+    "id": "6988cf2f1a679e607834047a",
+    "name": "Human Resources",
+    "code": "HR",
+    "description": "Human Resources & Administration",
+    "managerId": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:14.923Z",
+    "updatedAt": "2026-02-08T18:00:14.923Z"
+  }
+]
+--- DESIGNATIONS ---
+[
+  {
+    "id": "6988cf2f1a679e6078340480",
+    "name": "Chief Executive Officer",
+    "code": "CEO",
+    "level": 1,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e607834047e",
+    "name": "Chief Technology Officer",
+    "code": "CTO",
+    "level": 1,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e607834047f",
+    "name": "HR Manager",
+    "code": "HRM",
+    "level": 2,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340483",
+    "name": "Junior Developer",
+    "code": "JRDEV",
+    "level": 5,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340484",
+    "name": "HR Executive",
+    "code": "HRE",
+    "level": 4,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340485",
+    "name": "Sales Executive",
+    "code": "SALE",
+    "level": 4,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340486",
+    "name": "Marketing Lead",
+    "code": "MKTL",
+    "level": 3,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340487",
+    "name": "Developer",
+    "code": "DEV",
+    "level": 4,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340488",
+    "name": "Accountant",
+    "code": "ACC",
+    "level": 4,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340481",
+    "name": "Engineering Manager",
+    "code": "ENGM",
+    "level": 2,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  },
+  {
+    "id": "6988cf2f1a679e6078340482",
+    "name": "Senior Developer",
+    "code": "SRDEV",
+    "level": 3,
+    "description": null,
+    "isActive": true,
+    "createdAt": "2026-02-08T18:00:15.355Z",
+    "updatedAt": "2026-02-08T18:00:15.355Z"
+  }
+]

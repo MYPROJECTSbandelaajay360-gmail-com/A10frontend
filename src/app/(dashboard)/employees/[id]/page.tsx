@@ -33,6 +33,8 @@ interface ProfileData {
     gender: string
     department: string
     designation: string
+    departmentId?: string
+    designationId?: string
     employeeId: string
     joiningDate: string
     reportingManager: string
@@ -69,6 +71,33 @@ export default function EmployeeDetailsPage() {
         }
     }, [searchParams, canManage])
 
+    const [departments, setDepartments] = useState<string[]>([])
+    const [designations, setDesignations] = useState<string[]>([])
+
+    // Fetch departments and designations
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                const [deptsRes, desigsRes] = await Promise.all([
+                    fetch('/api/departments'),
+                    fetch('/api/designations')
+                ])
+                const deptsData = await deptsRes.json()
+                const desigsData = await desigsRes.json()
+
+                if (deptsData.departments) {
+                    setDepartments(deptsData.departments.map((d: any) => d.name))
+                }
+                if (desigsData.designations) {
+                    setDesignations(desigsData.designations.map((d: any) => d.name))
+                }
+            } catch (error) {
+                console.error('Error fetching metadata:', error)
+            }
+        }
+        fetchMetadata()
+    }, [])
+
     const [profileData, setProfileData] = useState<ProfileData>({
         firstName: '',
         lastName: '',
@@ -78,6 +107,8 @@ export default function EmployeeDetailsPage() {
         gender: '',
         department: '',
         designation: '',
+        departmentId: '',
+        designationId: '',
         employeeId: '',
         joiningDate: '',
         reportingManager: '',
@@ -92,6 +123,24 @@ export default function EmployeeDetailsPage() {
         employmentType: ''
     })
 
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                setMessage({ type: 'error', text: 'Image size should be less than 5MB' })
+                return
+            }
+
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setProfileData(prev => ({ ...prev, profileImage: reader.result as string }))
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
     const [originalData, setOriginalData] = useState<ProfileData | null>(null)
 
     useEffect(() => {
@@ -103,7 +152,9 @@ export default function EmployeeDetailsPage() {
     const fetchEmployee = async (id: string) => {
         try {
             setLoading(true)
-            const response = await fetch(`/api/employees/${id}`)
+            const response = await fetch(`/api/employees/${id}`, {
+                cache: 'no-store'
+            })
             const data = await response.json()
 
             if (response.ok && data.employee) {
@@ -117,6 +168,8 @@ export default function EmployeeDetailsPage() {
                     gender: employee.gender || '',
                     department: employee.department?.name || '',
                     designation: employee.designation?.name || '',
+                    departmentId: employee.departmentId || '',
+                    designationId: employee.designationId || '',
                     employeeId: employee.employeeId || '',
                     joiningDate: employee.joiningDate ? new Date(employee.joiningDate).toISOString().split('T')[0] : '',
                     reportingManager: employee.reportingManager
@@ -151,10 +204,19 @@ export default function EmployeeDetailsPage() {
             setSaving(true)
             setMessage(null)
 
+            // Create a clean payload removing fields that shouldn't/can't be updated directly via this endpoint
+            const {
+                reportingManager,
+                status,
+                departmentId,
+                designationId,
+                ...payload
+            } = profileData
+
             const response = await fetch(`/api/employees/${params.id}`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(profileData)
+                body: JSON.stringify(payload)
             })
 
             const data = await response.json()
@@ -163,19 +225,19 @@ export default function EmployeeDetailsPage() {
                 setMessage({ type: 'success', text: 'Employee profile updated successfully!' })
                 setOriginalData(profileData)
                 setIsEditing(false)
-
-                // Remove edit param without reloading
-                // router.replace(`/employees/${params.id}`)
             } else {
                 setMessage({ type: 'error', text: data.error || 'Failed to update profile' })
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving profile:', error)
-            setMessage({ type: 'error', text: 'Failed to save profile' })
+            setMessage({ type: 'error', text: `Error saving profile: ${error.message || 'Unknown error'}` })
         } finally {
             setSaving(false)
         }
     }
+
+
+
 
     const handleCancel = () => {
         if (originalData) {
@@ -257,8 +319,10 @@ export default function EmployeeDetailsPage() {
                         </div>
                         <div className="px-6 pb-6 pt-0 relative">
                             <div className="flex flex-col items-center -mt-16">
+
+
                                 <div className="relative group">
-                                    <div className="w-32 h-32 rounded-2xl bg-white p-1 shadow-xl shadow-black/5 ring-1 ring-gray-100">
+                                    <div className="w-32 h-32 rounded-2xl bg-white p-1 shadow-xl shadow-black/5 ring-1 ring-gray-100 relative">
                                         {profileData.profileImage ? (
                                             <img
                                                 src={profileData.profileImage}
@@ -269,6 +333,25 @@ export default function EmployeeDetailsPage() {
                                             <div className="w-full h-full rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
                                                 <User className="w-12 h-12" />
                                             </div>
+                                        )}
+
+                                        {isEditing && (
+                                            <>
+                                                <button
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="absolute bottom-2 right-2 p-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors z-10"
+                                                    title="Upload Photo"
+                                                >
+                                                    <Camera className="w-4 h-4" />
+                                                </button>
+                                                <input
+                                                    type="file"
+                                                    ref={fileInputRef}
+                                                    onChange={handleImageUpload}
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                />
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -433,18 +516,40 @@ export default function EmployeeDetailsPage() {
                             <h3 className="text-lg font-bold text-gray-900">Work Information</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputField
-                                label="Department"
-                                value={profileData.department}
-                                onChange={(val) => setProfileData({ ...profileData, department: val })}
-                                isEditing={isEditing}
-                            />
-                            <InputField
-                                label="Designation"
-                                value={profileData.designation}
-                                onChange={(val) => setProfileData({ ...profileData, designation: val })}
-                                isEditing={isEditing}
-                            />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-1.5">Department</label>
+                                {isEditing ? (
+                                    <select
+                                        value={profileData.department}
+                                        onChange={(e) => setProfileData({ ...profileData, department: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900"
+                                    >
+                                        <option value="">Select Department</option>
+                                        {departments.map(dept => (
+                                            <option key={dept} value={dept}>{dept}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <p className="text-gray-900 font-medium py-2.5 border-b border-transparent">{profileData.department || 'Not specified'}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-1.5">Designation</label>
+                                {isEditing ? (
+                                    <select
+                                        value={profileData.designation}
+                                        onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900"
+                                    >
+                                        <option value="">Select Designation</option>
+                                        {designations.map(desig => (
+                                            <option key={desig} value={desig}>{desig}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <p className="text-gray-900 font-medium py-2.5 border-b border-transparent">{profileData.designation || 'Not specified'}</p>
+                                )}
+                            </div>
                             <InputField
                                 label="Joining Date"
                                 value={profileData.joiningDate}

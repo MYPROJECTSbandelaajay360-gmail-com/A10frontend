@@ -120,6 +120,112 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+    try {
+        const session = await getServerSession(authOptions)
+        if (!['HR', 'ADMIN', 'CEO'].includes(session?.user?.role as string)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+
+        const body = await req.json()
+        const {
+            firstName, lastName, email, phone, gender, dateOfBirth,
+            address, city, state, country, postalCode,
+            emergencyContact, emergencyPhone,
+            department, designation, employmentType,
+            joiningDate, profileImage, status, role
+        } = body
+
+        // Find existing employee
+        const existingEmployee = await prisma.employee.findUnique({
+            where: { id: params.id },
+            include: { user: true }
+        })
+
+        if (!existingEmployee) {
+            return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
+        }
+
+        // Update User if needed
+        if (email || status || role) {
+            await prisma.user.update({
+                where: { id: existingEmployee.userId },
+                data: {
+                    email: email || undefined,
+                    status: (status as string) || undefined,
+                    role: (role as string) || undefined
+                }
+            })
+        }
+
+        // Handle relations by name
+        let departmentId = undefined
+        let designationId = undefined
+
+        if (department) {
+            const dept = await prisma.department.findFirst({ where: { name: department } })
+            if (dept) {
+                departmentId = dept.id
+                console.log(`Resolved department "${department}" to ID: ${departmentId}`)
+            } else {
+                console.log(`Failed to resolve department: "${department}"`)
+            }
+        }
+
+        if (designation) {
+            const desig = await prisma.designation.findFirst({ where: { name: designation } })
+            if (desig) {
+                designationId = desig.id
+                console.log(`Resolved designation "${designation}" to ID: ${designationId}`)
+            } else {
+                console.log(`Failed to resolve designation: "${designation}"`)
+            }
+        }
+
+        const parseDate = (d: any) => {
+            if (!d) return undefined
+            const date = new Date(d)
+            return isNaN(date.getTime()) ? undefined : date
+        }
+
+        const updatedEmployee = await prisma.employee.update({
+            where: { id: params.id },
+            data: {
+                firstName: firstName || undefined,
+                lastName: lastName || undefined,
+                email: email || undefined,
+                phone: phone || undefined,
+                gender: gender || undefined,
+                dateOfBirth: parseDate(dateOfBirth),
+                address: address || undefined,
+                city: city || undefined,
+                state: state || undefined,
+                country: country || undefined,
+                postalCode: postalCode || undefined,
+                emergencyContact: emergencyContact || undefined,
+                emergencyPhone: emergencyPhone || undefined,
+                departmentId: departmentId || undefined,
+                designationId: designationId || undefined,
+                employmentType: employmentType || undefined,
+                joiningDate: parseDate(joiningDate),
+                profileImage: profileImage || undefined
+            },
+            include: {
+                department: true,
+                designation: true
+            }
+        })
+
+        return NextResponse.json({
+            message: 'Employee updated successfully',
+            employee: updatedEmployee
+        })
+    } catch (error) {
+        console.error('Patch error', error)
+        return NextResponse.json({ error: 'Failed to update employee' }, { status: 500 })
+    }
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const session = await getServerSession(authOptions)
