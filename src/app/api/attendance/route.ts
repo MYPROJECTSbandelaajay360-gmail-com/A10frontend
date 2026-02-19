@@ -179,7 +179,10 @@ export async function POST(request: NextRequest) {
                     checkInLatitude: latitude,
                     checkInLongitude: longitude,
                     status: 'PRESENT', // Initial status
-                    checkInIP: request.headers.get('x-forwarded-for') || '127.0.0.1'
+                    checkInIP: request.headers.get('x-forwarded-for') || '127.0.0.1',
+                    lateReason: body.lateReason,
+                    hasProject: body.hasProject,
+                    projectName: body.projectName
                 }
             })
 

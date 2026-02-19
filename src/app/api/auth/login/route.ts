@@ -24,7 +24,7 @@ const users = [
     role: 'agent'
   },
   {
-    email: 'admin@gmail.com',
+    email: 'mongodb362@gmail.com',
     password: 'Admin123!',
     name: 'Admin User',
     role: 'admin'

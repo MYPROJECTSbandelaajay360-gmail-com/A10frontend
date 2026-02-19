@@ -146,14 +146,14 @@ export default function Header() {
                     <Link href="/" className="flex items-center space-x-3 group">
                         <Image
                             src="/images/logo.png"
-                            alt="HRMS Portal Logo"
+                            alt="Musterbook Logo"
                             width={40}
                             height={40}
                             className="rounded-xl shadow-lg shadow-amber-200/50 group-hover:shadow-amber-300/60 transition-all"
                         />
                         <div className="hidden sm:block">
                             <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                                HRMS Portal
+                                Musterbook
                             </h1>
                             <p className="text-[10px] text-amber-600 font-medium -mt-1">
                                 Ticket Management Portal

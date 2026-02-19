@@ -27,6 +27,7 @@ import {
     Building2,
     CalendarCheck
 } from 'lucide-react'
+import LateCheckInModal from '@/components/attendance/LateCheckInModal'
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -128,6 +129,10 @@ export default function AttendancePage() {
     const [wfhDate, setWfhDate] = useState(new Date().toISOString().split('T')[0])
     const [isSubmittingWFH, setIsSubmittingWFH] = useState(false)
     const [myWFHRequests, setMyWFHRequests] = useState<any[]>([])
+
+    // Late Check-in State
+    const [isLateModalOpen, setIsLateModalOpen] = useState(false)
+    const [pendingLateData, setPendingLateData] = useState<{ latitude: number; longitude: number } | null>(null)
 
     // Fetch WFH requests
     const fetchWFHRequests = useCallback(async () => {
@@ -303,7 +308,38 @@ export default function AttendancePage() {
         fetchAttendance()
     }, [fetchAttendance])
 
-    const handleCheckIn = async () => {
+    const handleCheckInAttempt = async () => {
+        // Check if late
+        if (timeWindows.checkInEnd && currentTime) {
+            // Robust time parsing
+            const match = timeWindows.checkInEnd.match(/(\d+):(\d+)\s*(AM|PM)/i)
+            if (match) {
+                const [_, h, m, period] = match
+                let endHour = parseInt(h)
+                const endMinute = parseInt(m)
+
+                if (period.toUpperCase() === 'PM' && endHour !== 12) endHour += 12
+                if (period.toUpperCase() === 'AM' && endHour === 12) endHour = 0
+
+                let checkInEnd = new Date(currentTime)
+                checkInEnd.setHours(endHour, endMinute, 0, 0)
+
+                // If current time is AFTER checkInEnd, it is late
+                if (currentTime > checkInEnd) {
+                    if (location) {
+                        setPendingLateData({ latitude: location.latitude, longitude: location.longitude })
+                    }
+                    setIsLateModalOpen(true)
+                    return
+                }
+            }
+        }
+
+        // Not late, proceed with normal check-in
+        await performCheckIn({})
+    }
+
+    const performCheckIn = async (extraData: { lateReason?: string; hasProject?: boolean; projectName?: string }) => {
         setLoading(true)
         setMessage(null)
         try {
@@ -314,13 +350,15 @@ export default function AttendancePage() {
                     action: 'check-in',
                     latitude: location?.latitude,
                     longitude: location?.longitude,
-                    workMode // 'OFFICE' | 'WFH'
+                    workMode, // 'OFFICE' | 'WFH'
+                    ...extraData
                 })
             })
             const data = await response.json()
             if (response.ok) {
                 setMessage({ type: 'success', text: data.message })
                 setTodayStatus({ isCheckedIn: true, isCheckedOut: false, checkInTime: data.checkInTime })
+                setIsLateModalOpen(false)
                 fetchAttendance()
             } else {
                 setMessage({ type: 'error', text: data.error })
@@ -331,6 +369,8 @@ export default function AttendancePage() {
             setLoading(false)
         }
     }
+
+    const handleCheckIn = () => handleCheckInAttempt()
 
     const handleCheckOut = async () => {
         setLoading(true)
@@ -858,6 +898,15 @@ export default function AttendancePage() {
                     </div>
                 </div>
             )}
+
+            {/* Late Check-In Modal */}
+            <LateCheckInModal
+                isOpen={isLateModalOpen}
+                onClose={() => setIsLateModalOpen(false)}
+                onSubmit={(data) => performCheckIn(data)}
+                isSubmitting={loading}
+                lateThresholdTime={timeWindows.checkInEnd || '10:00 AM'}
+            />
         </div>
     )
 }

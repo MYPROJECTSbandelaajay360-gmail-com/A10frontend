@@ -5,8 +5,9 @@ import { authOptions } from '@/lib/auth'
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
     try {
         const id = params.id
         const BACKEND_URL = `http://127.0.0.1:8001/api/notifications/${id}`

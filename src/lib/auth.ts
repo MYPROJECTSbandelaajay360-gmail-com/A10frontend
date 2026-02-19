@@ -75,7 +75,9 @@ export const authOptions: NextAuthOptions = {
             // Always update/refresh the access token to prevent expiration (Sliding Window)
             // Ensure we have the necessary user data before signing
             if (token.id && token.email) {
-                const secret = process.env.NEXTAUTH_SECRET || 'your-secret-key';
+                const secret = process.env.NEXTAUTH_SECRET;
+                if (!secret) throw new Error("NEXTAUTH_SECRET is not defined");
+
                 // console.log('Refreshing access token for:', token.email); 
                 token.accessToken = jwt.sign(
                     {

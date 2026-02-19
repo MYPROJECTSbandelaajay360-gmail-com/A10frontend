@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import User from '@/models/User';
-import connectDB from '@/lib/db';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // GET single user
 export async function GET(
@@ -8,13 +9,25 @@ export async function GET(
     props: { params: Promise<{ id: string }> }
 ) {
     const params = await props.params;
-    await connectDB();
     try {
-        const user = await User.findById(params.id).select('-passwordHash');
+        const user = await prisma.user.findUnique({
+            where: { id: params.id },
+            include: { employee: true }
+        });
+
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
-        return NextResponse.json({ user });
+
+        const formattedUser = {
+            _id: user.id,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+            name: user.employee ? `${user.employee.firstName} ${user.employee.lastName}` : user.email.split('@')[0],
+        };
+
+        return NextResponse.json({ user: formattedUser });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
     }
@@ -26,31 +39,28 @@ export async function PUT(
     props: { params: Promise<{ id: string }> }
 ) {
     const params = await props.params;
-    await connectDB();
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !['ADMIN', 'HR'].includes(session.user.role as string)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { role, status } = body;
 
-        // Validation
-        if (role && !['user', 'admin', 'supervisor'].includes(role)) {
+        // Validation - Roles match Prisma system
+        const validRoles = ['ADMIN', 'HR', 'MANAGER', 'SUPERVISOR', 'EMPLOYEE'];
+        if (role && !validRoles.includes(role.toUpperCase())) {
             return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
         }
-        if (status && !['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status)) {
-            return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-        }
 
-        const updatedUser = await User.findByIdAndUpdate(
-            params.id,
-            {
-                ...(role && { role }),
+        const updatedUser = await prisma.user.update({
+            where: { id: params.id },
+            data: {
+                ...(role && { role: role.toUpperCase() }),
                 ...(status && { status }),
             },
-            { new: true }
-        ).select('-passwordHash');
-
-        if (!updatedUser) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+        });
 
         return NextResponse.json({ user: updatedUser });
     } catch (error) {
@@ -65,13 +75,15 @@ export async function DELETE(
     props: { params: Promise<{ id: string }> }
 ) {
     const params = await props.params;
-    await connectDB();
     try {
-        const deletedUser = await User.findByIdAndDelete(params.id);
-
-        if (!deletedUser) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        const session = await getServerSession(authOptions);
+        if (session?.user?.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Only ADMIN can delete users' }, { status: 403 });
         }
+
+        await prisma.user.delete({
+            where: { id: params.id }
+        });
 
         return NextResponse.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {

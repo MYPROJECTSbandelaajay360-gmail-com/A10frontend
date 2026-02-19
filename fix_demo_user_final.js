@@ -11,7 +11,7 @@ async function main() {
         await client.connect();
         const db = client.db('hrms');
 
-        console.log("--- DEBUG: EXISTING USERS ---");
+        console.log("--- DEBUG: ALL USERS ---");
         const users = await db.collection('users').find({}).toArray();
         users.forEach(u => console.log(`- ${u.name} (${u.email}) [_id: ${u._id}]`));
 

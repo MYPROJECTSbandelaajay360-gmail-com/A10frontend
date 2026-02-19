@@ -11,10 +11,10 @@ export default function Footer() {
           {/* About */}
           <div>
             <h3 className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent mb-4">
-              HRMS Portal
+              Musterbook
             </h3>
             <p className="text-gray-600 text-sm mb-4">
-              Your trusted HR Management System for handling employee management and workflows.
+              Your trusted Musterbook for handling employee management and workflows.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-primary-dark transition-colors">
@@ -87,8 +87,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li className="flex items-center space-x-2 text-gray-600">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:support@hrms-portal.com" className="hover:text-primary-dark transition-colors">
-                  support@hrms-portal.com
+                <a href="mailto:support@musterbook.com" className="hover:text-primary-dark transition-colors">
+                  support@musterbook.com
                 </a>
               </li>
             </ul>
@@ -97,7 +97,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
-          <p>&copy; {currentYear} HRMS Portal. All rights reserved.</p>
+          <p>&copy; {currentYear} Musterbook. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="hover:text-primary-dark transition-colors">
               Privacy Policy

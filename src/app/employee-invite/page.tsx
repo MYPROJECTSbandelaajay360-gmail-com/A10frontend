@@ -183,7 +183,7 @@ function AcceptInviteContent() {
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                             <Zap className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-2xl font-bold text-white">HRMS Portal</span>
+                        <span className="text-2xl font-bold text-white">Musterbook</span>
                     </Link>
                 </div>
 

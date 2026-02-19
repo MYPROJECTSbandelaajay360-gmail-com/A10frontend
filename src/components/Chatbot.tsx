@@ -23,7 +23,7 @@ export default function Chatbot({ isOpen, onClose, sessionId = 'default', initia
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hi! I\'m your HRMS Portal support assistant. How can I help you today?',
+      text: 'Hi! I\'m your Musterbook support assistant. How can I help you today?',
       sender: 'bot',
       timestamp: new Date(),
     },
@@ -130,7 +130,7 @@ export default function Chatbot({ isOpen, onClose, sessionId = 'default', initia
             <Bot className="h-5 w-5 text-amber-600" />
           </div>
           <div>
-            <h3 className="font-bold">HRMS Assistant</h3>
+            <h3 className="font-bold">Musterbook Assistant</h3>
             <p className="text-xs opacity-90">Always here to help</p>
           </div>
         </div>
@@ -159,8 +159,8 @@ export default function Chatbot({ isOpen, onClose, sessionId = 'default', initia
               <div>
                 <div
                   className={`rounded-2xl px-4 py-2 ${message.sender === 'user'
-                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900'
-                      : 'bg-gray-100 text-gray-900'
+                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900'
+                    : 'bg-gray-100 text-gray-900'
                     }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.text}</p>

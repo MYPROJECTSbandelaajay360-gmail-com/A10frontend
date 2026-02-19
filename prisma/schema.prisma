@@ -230,6 +230,11 @@ model Attendance {
   isAutoMarked      Boolean          @default(false)
   autoMarkReason    String?
   
+  // Late Check-in Details
+  lateReason        String?
+  hasProject        Boolean          @default(false)
+  projectName       String?
+  
   // Timestamps
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt

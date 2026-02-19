@@ -158,7 +158,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center mt-8 text-sm text-gray-500">
-          © {new Date().getFullYear()} HRMS Portal
+          © {new Date().getFullYear()} Musterbook
         </p>
       </div>
     </div>

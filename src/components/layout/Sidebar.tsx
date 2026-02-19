@@ -224,7 +224,7 @@ export default function Sidebar() {
                         <div className="sidebar-logo-icon">
                             <Zap className="w-5 h-5 text-white fill-white" />
                         </div>
-                        <span className="sidebar-logo-text">HRMS</span>
+                        <span className="sidebar-logo-text">Musterbook</span>
                     </Link>
                 </div>
 

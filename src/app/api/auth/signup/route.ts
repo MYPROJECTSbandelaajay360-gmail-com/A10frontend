@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
-import { signAccessToken, signRefreshToken } from '@/lib/jwt';
+// import { signAccessToken, signRefreshToken } from '@/lib/jwt'; // Removed unused import
 
 // Helper function to validate strong password
 const isStrongPassword = (password: string): boolean => {

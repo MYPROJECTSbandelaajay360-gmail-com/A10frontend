@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
             notifications.push({
                 id: 'welcome',
                 title: 'Welcome',
-                message: 'Welcome to the new HRMS Portal!',
+                message: 'Welcome to the new Musterbook!',
                 time: new Date(),
                 read: false,
                 type: 'info'

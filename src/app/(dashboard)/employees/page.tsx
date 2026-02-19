@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import ResetPasswordModal from '@/components/ResetPasswordModal'
 
 interface Employee {
     id: string
@@ -38,6 +39,12 @@ interface Employee {
     joiningDate: string
     status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
     profileImage?: string
+    user?: {
+        id: string
+        email: string
+        role: string
+        status: string
+    }
 }
 
 interface EmployeeInvite {
@@ -67,6 +74,7 @@ export default function EmployeesPage() {
     const [inviteStatusFilter, setInviteStatusFilter] = useState('all')
     const [resendingId, setResendingId] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'employees' | 'invites'>('employees')
+    const [resetPasswordEmployee, setResetPasswordEmployee] = useState<{ id: string, name: string, email: string } | null>(null)
 
     const userRole = session?.user?.role || 'EMPLOYEE'
     const canManage = ['HR', 'ADMIN', 'CEO'].includes(userRole)
@@ -480,6 +488,20 @@ export default function EmployeesPage() {
                                                                     Edit
                                                                 </button>
                                                                 <button
+                                                                    onClick={() => {
+                                                                        setResetPasswordEmployee({
+                                                                            id: employee.user?.id || '',
+                                                                            name: employee.name,
+                                                                            email: employee.email
+                                                                        })
+                                                                        setActiveMenu(null)
+                                                                    }}
+                                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                                >
+                                                                    <RefreshCw className="w-4 h-4" />
+                                                                    Reset Password
+                                                                </button>
+                                                                <button
                                                                     onClick={() => handleDeleteEmployee(employee.id)}
                                                                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                                                 >
@@ -657,6 +679,13 @@ export default function EmployeesPage() {
                         </p>
                     </div>
                 </div>
+            )}
+            {/* Reset Password Modal */}
+            {resetPasswordEmployee && (
+                <ResetPasswordModal
+                    employee={resetPasswordEmployee}
+                    onClose={() => setResetPasswordEmployee(null)}
+                />
             )}
         </div>
     )

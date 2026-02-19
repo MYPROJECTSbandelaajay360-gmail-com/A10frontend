@@ -5,8 +5,9 @@ import EmployeeInvite from '@/models/EmployeeInvite';
 // GET - Fetch single employee invite
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
     try {
         await connectDB();
 
@@ -26,8 +27,9 @@ export async function GET(
 // PATCH - Update employee invite (e.g., revoke)
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
     try {
         const body = await request.json();
         const { status, ...updateData } = body;
@@ -67,8 +69,9 @@ export async function PATCH(
 // DELETE - Delete employee invite
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
     try {
         await connectDB();
 

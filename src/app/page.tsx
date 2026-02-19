@@ -31,7 +31,7 @@ export default async function Home() {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-xl text-gray-900">HRMS</span>
+          <span className="font-bold text-xl text-gray-900">Musterbook</span>
         </div>
         <Link
           href="/login"
@@ -63,7 +63,7 @@ export default async function Home() {
 
       {/* Simple Footer */}
       <footer className="relative z-10 p-6 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} HRMS Portal. All rights reserved.
+        © {new Date().getFullYear()} Musterbook. All rights reserved.
       </footer>
     </div>
   )

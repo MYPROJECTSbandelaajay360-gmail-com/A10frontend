@@ -5,7 +5,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   passwordHash: string;
-  role: 'user' | 'admin' | 'supervisor';
+  role: 'user' | 'admin' | 'supervisor' | 'hr' | 'manager';
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   emailVerified: boolean;
   emailVerificationToken?: string;
@@ -49,7 +49,7 @@ const UserSchema: Schema = new Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'admin', 'supervisor'],
+      enum: ['user', 'admin', 'supervisor', 'hr', 'manager'],
       default: 'user',
     },
     status: {
