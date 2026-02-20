@@ -1,8 +1,9 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import connectDB from './db'
+import User from '@/models/User'
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -18,35 +19,31 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 try {
-                    // Fetch user from database
-                    const user = await prisma.user.findUnique({
-                        where: { email: credentials.email },
-                        include: { employee: true }
-                    })
+                    await connectDB()
+
+                    const user = await User.findOne({
+                        email: credentials.email.toLowerCase()
+                    }).select('+passwordHash')
 
                     if (!user) {
                         throw new Error('Invalid credentials')
                     }
 
-                    // Verify password
-                    const isValid = await bcrypt.compare(credentials.password, user.password)
+                    if (user.status === 'SUSPENDED') {
+                        throw new Error('Your account has been suspended')
+                    }
+
+                    const isValid = await bcrypt.compare(credentials.password, user.passwordHash)
 
                     if (!isValid) {
                         throw new Error('Invalid credentials')
                     }
 
-                    // Construct user object
-                    const name = user.employee
-                        ? `${user.employee.firstName} ${user.employee.lastName}`
-                        : user.email.split('@')[0]
-
                     return {
-                        id: user.id,
+                        id: user._id.toString(),
                         email: user.email,
                         role: user.role,
-                        name: name,
-                        employeeId: user.employee?.id,
-                        image: user.employee?.profileImage,
+                        name: user.name,
                     }
                 } catch (error: any) {
                     console.error('Login error:', error)
