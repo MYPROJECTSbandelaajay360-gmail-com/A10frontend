@@ -1,26 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import dbConnect from '@/lib/db'
+import Settings from '@/models/Settings'
 
-const BACKEND_URL = 'http://127.0.0.1:8001/api/settings'
+const DEFAULT_SETTINGS = {
+    officeLocation: {
+        name: '',
+        latitude: '',
+        longitude: '',
+        radius: '100'
+    },
+    wifiIPs: [],
+    company: {
+        name: 'My Company',
+        timezone: 'Asia/Kolkata',
+        workStartTime: '09:00',
+        workEndTime: '18:00',
+        checkinWindowStart: '09:00',
+        checkinWindowEnd: '10:30',
+        checkoutWindowStart: '18:30',
+        checkoutWindowEnd: '20:30'
+    }
+}
 
 export async function GET() {
     try {
         const session = await getServerSession(authOptions)
-        if (!(session as any)?.accessToken) {
+        if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const res = await fetch(BACKEND_URL, {
-            headers: {
-                'Authorization': `Bearer ${(session as any).accessToken}`
-            }
-        })
+        await dbConnect()
+        let settings = await Settings.findOne({ key: 'global' })
 
-        const data = await res.json()
-        return NextResponse.json(data, { status: res.status })
+        if (!settings) {
+            // Return defaults if no settings saved yet
+            return NextResponse.json(DEFAULT_SETTINGS)
+        }
+
+        return NextResponse.json({
+            officeLocation: settings.officeLocation,
+            wifiIPs: settings.wifiIPs,
+            company: settings.company
+        })
     } catch (error) {
-        console.error('Error fetching settings from backend:', error)
+        console.error('Error fetching settings:', error)
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 })
     }
 }
@@ -28,45 +53,34 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
-        // Note: Role check is done on backend too, but good to have here
-        if (!session || !['ADMIN', 'CEO'].includes(session.user?.role || '') || !(session as any)?.accessToken) {
-            console.error('Frontend API Unauthorized: Missing session or accessToken', {
-                hasSession: !!session,
-                role: session?.user?.role,
-                hasToken: !!(session as any)?.accessToken
-            })
+        if (!session || !['ADMIN', 'CEO'].includes(session.user?.role || '')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const body = await request.json()
+        await dbConnect()
 
-        const res = await fetch(BACKEND_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${(session as any).accessToken}`
+        const settings = await Settings.findOneAndUpdate(
+            { key: 'global' },
+            {
+                $set: {
+                    officeLocation: body.officeLocation,
+                    wifiIPs: body.wifiIPs || [],
+                    company: body.company,
+                    updatedAt: new Date()
+                }
             },
-            body: JSON.stringify(body)
+            { upsert: true, new: true }
+        )
+
+        return NextResponse.json({
+            officeLocation: settings.officeLocation,
+            wifiIPs: settings.wifiIPs,
+            company: settings.company,
+            message: 'Settings saved successfully'
         })
-
-        if (!res.ok) {
-            const errorText = await res.text()
-            console.error('Backend API Error:', {
-                status: res.status,
-                statusText: res.statusText,
-                body: errorText
-            })
-            try {
-                return NextResponse.json(JSON.parse(errorText), { status: res.status })
-            } catch (e) {
-                return NextResponse.json({ error: errorText }, { status: res.status })
-            }
-        }
-
-        const data = await res.json()
-        return NextResponse.json(data, { status: res.status })
     } catch (error) {
-        console.error('Error saving settings to backend:', error)
+        console.error('Error saving settings:', error)
         return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 })
     }
 }

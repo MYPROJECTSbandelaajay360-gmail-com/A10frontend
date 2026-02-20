@@ -11,13 +11,17 @@ import {
     Wallet,
     CalendarDays,
     FileText,
-    Filter
+    Filter,
+    Loader2,
+    CheckCircle
 } from 'lucide-react'
 
 export default function ReportsPage() {
     const { data: session } = useSession()
     const [selectedReport, setSelectedReport] = useState<string | null>(null)
     const [dateRange, setDateRange] = useState({ from: '', to: '' })
+    const [downloading, setDownloading] = useState<string | null>(null)
+    const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null)
 
     const reports = [
         {
@@ -74,6 +78,46 @@ export default function ReportsPage() {
         { month: 'Jun', present: 91, absent: 5, leave: 4 },
     ]
 
+    const handleDownload = async (reportId: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation()
+        setDownloading(reportId)
+        try {
+            const params = new URLSearchParams({ type: reportId })
+            if (dateRange.from) params.set('from', dateRange.from)
+            if (dateRange.to) params.set('to', dateRange.to)
+
+            const res = await fetch(`/api/reports?${params.toString()}`)
+
+            if (!res.ok) {
+                const err = await res.json()
+                alert(err.error || 'Failed to generate report')
+                return
+            }
+
+            const blob = await res.blob()
+            const disposition = res.headers.get('Content-Disposition') || ''
+            const filenameMatch = disposition.match(/filename="(.+)"/)
+            const filename = filenameMatch ? filenameMatch[1] : `${reportId}_report.csv`
+
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = filename
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+
+            setDownloadSuccess(reportId)
+            setTimeout(() => setDownloadSuccess(null), 2000)
+        } catch (error) {
+            console.error('Download failed:', error)
+            alert('Download failed. Please try again.')
+        } finally {
+            setDownloading(null)
+        }
+    }
+
     const departmentData = [
         { name: 'Engineering', employees: 45, avgAttendance: 94 },
         { name: 'Marketing', employees: 12, avgAttendance: 91 },
@@ -124,6 +168,8 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {reports.map(report => {
                     const Icon = report.icon
+                    const isDownloading = downloading === report.id
+                    const isSuccess = downloadSuccess === report.id
                     return (
                         <div
                             key={report.id}
@@ -135,8 +181,19 @@ export default function ReportsPage() {
                                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${report.color}`}>
                                     <Icon className="w-6 h-6" />
                                 </div>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <Download className="w-5 h-5 text-gray-400" />
+                                <button
+                                    onClick={(e) => handleDownload(report.id, e)}
+                                    disabled={isDownloading}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                                    title={`Download ${report.name}`}
+                                >
+                                    {isDownloading ? (
+                                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                                    ) : isSuccess ? (
+                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                    ) : (
+                                        <Download className="w-5 h-5 text-gray-400 hover:text-blue-500" />
+                                    )}
                                 </button>
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900 mt-4">{report.name}</h3>
@@ -203,9 +260,22 @@ export default function ReportsPage() {
             {/* Generate Report Button */}
             {selectedReport && (
                 <div className="flex justify-end">
-                    <button className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all">
-                        <Download className="w-5 h-5" />
-                        Generate & Download Report
+                    <button
+                        onClick={() => handleDownload(selectedReport)}
+                        disabled={downloading === selectedReport}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                    >
+                        {downloading === selectedReport ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="w-5 h-5" />
+                                Generate &amp; Download Report
+                            </>
+                        )}
                     </button>
                 </div>
             )}
