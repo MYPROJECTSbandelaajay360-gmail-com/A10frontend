@@ -1,9 +1,8 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import connectDB from './db'
-import User from '@/models/User'
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -19,11 +18,10 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 try {
-                    await connectDB()
-
-                    const user = await User.findOne({
-                        email: credentials.email.toLowerCase()
-                    }).select('+passwordHash')
+                    const user = await prisma.user.findUnique({
+                        where: { email: credentials.email.toLowerCase() },
+                        include: { employee: true }
+                    })
 
                     if (!user) {
                         throw new Error('Invalid credentials')
@@ -33,17 +31,23 @@ export const authOptions: NextAuthOptions = {
                         throw new Error('Your account has been suspended')
                     }
 
-                    const isValid = await bcrypt.compare(credentials.password, user.passwordHash)
+                    const isValid = await bcrypt.compare(credentials.password, user.password)
 
                     if (!isValid) {
                         throw new Error('Invalid credentials')
                     }
 
+                    const name = user.employee
+                        ? `${user.employee.firstName} ${user.employee.lastName}`
+                        : user.email.split('@')[0]
+
                     return {
-                        id: user._id.toString(),
+                        id: user.id,
                         email: user.email,
                         role: user.role,
-                        name: user.name,
+                        name: name,
+                        employeeId: user.employee?.id,
+                        image: user.employee?.profileImage,
                     }
                 } catch (error: any) {
                     console.error('Login error:', error)

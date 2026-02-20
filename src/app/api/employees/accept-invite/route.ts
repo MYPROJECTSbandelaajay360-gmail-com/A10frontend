@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import EmployeeInvite from '@/models/EmployeeInvite';
-import User from '@/models/User';
 import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
     try {
@@ -43,23 +43,57 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'This invitation has expired. Please contact HR for a new invite.' }, { status: 400 });
         }
 
-        // 2. Create user account directly in MongoDB
+        // 2. Create Prisma User + Employee so they appear in all lists
         try {
             // Check if user already exists
-            const existingUser = await User.findOne({ email: invite.email.toLowerCase() });
+            const existingUser = await prisma.user.findUnique({ where: { email: invite.email.toLowerCase() } });
             if (existingUser) {
                 return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
             }
 
-            const passwordHash = await bcrypt.hash(password, 12);
+            const hashedPassword = await bcrypt.hash(password, 12);
 
-            const newUser = await User.create({
-                name: `${invite.firstName} ${invite.lastName}`,
-                email: invite.email.toLowerCase(),
-                passwordHash,
-                role: 'user',
-                status: 'APPROVED',
-                emailVerified: true,
+            // Look up or create Department
+            let department = await prisma.department.findFirst({ where: { name: invite.department } });
+            if (!department) {
+                const deptCode = invite.department.replace(/\s+/g, '').substring(0, 6).toUpperCase();
+                const uniqueCode = `${deptCode}${Date.now().toString().slice(-3)}`;
+                department = await prisma.department.create({
+                    data: { name: invite.department, code: uniqueCode }
+                });
+            }
+
+            // Look up or create Designation
+            let designation = await prisma.designation.findFirst({ where: { name: invite.designation } });
+            if (!designation) {
+                const desigCode = invite.designation.replace(/\s+/g, '').substring(0, 6).toUpperCase();
+                const uniqueCode = `${desigCode}${Date.now().toString().slice(-3)}`;
+                designation = await prisma.designation.create({
+                    data: { name: invite.designation, code: uniqueCode }
+                });
+            }
+
+            // Create User + Employee
+            const newUser = await prisma.user.create({
+                data: {
+                    email: invite.email.toLowerCase(),
+                    password: hashedPassword,
+                    role: 'EMPLOYEE',
+                    status: 'ACTIVE',
+                    employee: {
+                        create: {
+                            employeeId: invite.employeeId || `EMP${Date.now().toString().slice(-6)}`,
+                            firstName: invite.firstName,
+                            lastName: invite.lastName,
+                            email: invite.email.toLowerCase(),
+                            phone: invite.phone || '',
+                            departmentId: department.id,
+                            designationId: designation.id,
+                            joiningDate: invite.joiningDate,
+                        }
+                    }
+                },
+                include: { employee: true }
             });
 
             // 3. Mark invite as accepted
@@ -72,8 +106,8 @@ export async function POST(request: Request) {
                 success: true,
                 message: 'Account created successfully! You can now login.',
                 user: {
-                    id: newUser._id,
-                    name: newUser.name,
+                    id: newUser.id,
+                    name: `${invite.firstName} ${invite.lastName}`,
                     email: newUser.email,
                     role: newUser.role,
                 }
