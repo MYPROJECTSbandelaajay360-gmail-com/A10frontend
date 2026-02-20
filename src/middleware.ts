@@ -8,12 +8,12 @@ export default withAuth(
 
     // Role-based access control
     const roleAccess: Record<string, string[]> = {
-      '/settings': ['ADMIN', 'CEO'],
-      '/employees/add': ['HR', 'ADMIN', 'CEO'],
-      '/payroll/process': ['HR', 'ADMIN', 'CEO'],
-      '/leave/approvals': ['MANAGER', 'HR', 'ADMIN', 'CEO'],
-      '/attendance/team': ['MANAGER', 'HR', 'ADMIN', 'CEO'],
-      '/reports': ['HR', 'ADMIN', 'CEO'],
+      '/dashboard/settings': ['ADMIN', 'CEO'],
+      '/dashboard/employees/add': ['HR', 'ADMIN', 'CEO'],
+      '/dashboard/payroll/process': ['HR', 'ADMIN', 'CEO'],
+      '/dashboard/leave/approvals': ['MANAGER', 'HR', 'ADMIN', 'CEO'],
+      '/dashboard/attendance/team': ['MANAGER', 'HR', 'ADMIN', 'CEO'],
+      '/dashboard/reports': ['HR', 'ADMIN', 'CEO'],
     }
 
     // Check if the path requires specific roles
@@ -38,14 +38,5 @@ export default withAuth(
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/attendance/:path*',
-    '/leave/:path*',
-    '/employees/:path*',
-    '/payroll/:path*',
-    '/holidays/:path*',
-    '/reports/:path*',
-    '/settings/:path*',
-    '/profile/:path*',
-    '/notifications/:path*',
   ]
 }

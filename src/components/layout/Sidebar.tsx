@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -49,72 +49,72 @@ const navigation: NavItem[] = [
     },
     {
         name: 'Employees',
-        href: '/employees',
+        href: '/dashboard/employees',
         icon: Users,
         roles: ['ADMIN', 'HR', 'MANAGER'],
         children: [
-            { name: 'All Employees', href: '/employees', icon: Users },
-            { name: 'Departments', href: '/employees/departments', icon: Building2 },
-            { name: 'Designations', href: '/employees/designations', icon: Briefcase },
+            { name: 'All Employees', href: '/dashboard/employees', icon: Users },
+            { name: 'Departments', href: '/dashboard/employees/departments', icon: Building2 },
+            { name: 'Designations', href: '/dashboard/employees/designations', icon: Briefcase },
         ]
     },
     {
         name: 'Attendance',
-        href: '/attendance',
+        href: '/dashboard/attendance',
         icon: Clock,
         children: [
-            { name: 'My Attendance', href: '/attendance', icon: Clock },
-            { name: 'Team Attendance', href: '/attendance/team', icon: Users, roles: ['MANAGER', 'HR', 'ADMIN'] },
-            { name: 'Reports', href: '/attendance/reports', icon: BarChart3, roles: ['HR', 'ADMIN'] },
+            { name: 'My Attendance', href: '/dashboard/attendance', icon: Clock },
+            { name: 'Team Attendance', href: '/dashboard/attendance/team', icon: Users, roles: ['MANAGER', 'HR', 'ADMIN'] },
+            { name: 'Reports', href: '/dashboard/attendance/reports', icon: BarChart3, roles: ['HR', 'ADMIN'] },
         ]
     },
     {
         name: 'Leave',
-        href: '/leave',
+        href: '/dashboard/leave',
         icon: CalendarDays,
         children: [
-            { name: 'My Leaves', href: '/leave', icon: CalendarDays },
-            { name: 'Apply Leave', href: '/leave/apply', icon: FileText },
-            { name: 'Approvals', href: '/leave/approvals', icon: FileCheck, roles: ['MANAGER', 'HR', 'ADMIN'] },
-            { name: 'Leave Reports', href: '/leave/reports', icon: ClipboardList, roles: ['HR', 'ADMIN'] },
+            { name: 'My Leaves', href: '/dashboard/leave', icon: CalendarDays },
+            { name: 'Apply Leave', href: '/dashboard/leave/apply', icon: FileText },
+            { name: 'Approvals', href: '/dashboard/leave/approvals', icon: FileCheck, roles: ['MANAGER', 'HR', 'ADMIN'] },
+            { name: 'Leave Reports', href: '/dashboard/leave/reports', icon: ClipboardList, roles: ['HR', 'ADMIN'] },
         ]
     },
     {
         name: 'Holidays',
-        href: '/holidays',
+        href: '/dashboard/holidays',
         icon: Calendar
     },
     {
         name: 'Payroll',
-        href: '/payroll',
+        href: '/dashboard/payroll',
         icon: Wallet,
         children: [
-            { name: 'My Payslips', href: '/payroll', icon: FileText },
-            { name: 'Salary Structure', href: '/payroll/salary', icon: Wallet, roles: ['HR', 'ADMIN'] },
-            { name: 'Process Payroll', href: '/payroll/process', icon: ClipboardList, roles: ['HR', 'ADMIN'] },
+            { name: 'My Payslips', href: '/dashboard/payroll', icon: FileText },
+            { name: 'Salary Structure', href: '/dashboard/payroll/salary', icon: Wallet, roles: ['HR', 'ADMIN'] },
+            { name: 'Process Payroll', href: '/dashboard/payroll/process', icon: ClipboardList, roles: ['HR', 'ADMIN'] },
         ]
     },
     {
         name: 'Reports',
-        href: '/reports',
+        href: '/dashboard/reports',
         icon: BarChart3,
         roles: ['HR', 'ADMIN']
     },
     {
         name: 'Announcements',
-        href: '/announcements',
+        href: '/dashboard/announcements',
         icon: Megaphone
     },
     {
         name: 'Settings',
-        href: '/settings',
+        href: '/dashboard/settings',
         icon: Settings,
         roles: ['ADMIN'],
         children: [
-            { name: 'General', href: '/settings', icon: Settings },
-            { name: 'User Management', href: '/settings/users', icon: UserCog },
-            { name: 'Leave Types', href: '/settings/leave-types', icon: CalendarDays },
-            { name: 'Shifts', href: '/settings/shifts', icon: Clock },
+            { name: 'General', href: '/dashboard/settings', icon: Settings },
+            { name: 'User Management', href: '/dashboard/settings/users', icon: UserCog },
+            { name: 'Leave Types', href: '/dashboard/settings/leave-types', icon: CalendarDays },
+            { name: 'Shifts', href: '/dashboard/settings/shifts', icon: Clock },
         ]
     },
 ]
