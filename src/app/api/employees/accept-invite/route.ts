@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import EmployeeInvite from '@/models/EmployeeInvite';
+import User from '@/models/User';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
     try {
@@ -41,37 +43,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'This invitation has expired. Please contact HR for a new invite.' }, { status: 400 });
         }
 
-        // 2. Call Backend to Create Employee Account
+        // 2. Create user account directly in MongoDB
         try {
-            const backendResponse = await fetch('http://localhost:8001/api/employees/accept-invite', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token,
-                    password,
-                    email: invite.email,
-                    firstName: invite.firstName,
-                    lastName: invite.lastName,
-                    phone: invite.phone,
-                    department: invite.department,
-                    designation: invite.designation,
-                    employeeId: invite.employeeId,
-                    joiningDate: invite.joiningDate,
-                    salary: invite.salary,
-                    reportingManager: invite.reportingManager
-                }),
-            });
-
-            const backendData = await backendResponse.json();
-
-            if (!backendResponse.ok) {
-                return NextResponse.json(
-                    { error: backendData.error || 'Failed to create account' },
-                    { status: backendResponse.status }
-                );
+            // Check if user already exists
+            const existingUser = await User.findOne({ email: invite.email.toLowerCase() });
+            if (existingUser) {
+                return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
             }
 
-            // 3. Update Frontend DB Invite Status (Only if backend success)
+            const passwordHash = await bcrypt.hash(password, 12);
+
+            const newUser = await User.create({
+                name: `${invite.firstName} ${invite.lastName}`,
+                email: invite.email.toLowerCase(),
+                passwordHash,
+                role: 'user',
+                status: 'APPROVED',
+                emailVerified: true,
+            });
+
+            // 3. Mark invite as accepted
             invite.status = 'accepted';
             invite.acceptedAt = new Date();
             await invite.save();
@@ -80,12 +71,17 @@ export async function POST(request: Request) {
             return NextResponse.json({
                 success: true,
                 message: 'Account created successfully! You can now login.',
-                user: backendData.user
+                user: {
+                    id: newUser._id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: newUser.role,
+                }
             });
 
-        } catch (bkError) {
-            console.error('[NextAPI] Failed to contact backend:', bkError);
-            return NextResponse.json({ error: 'Failed to communicate with server. Please try again.' }, { status: 502 });
+        } catch (createError: any) {
+            console.error('[NextAPI] Failed to create user account:', createError);
+            return NextResponse.json({ error: 'Failed to create account. Please try again.' }, { status: 500 });
         }
 
     } catch (error) {
