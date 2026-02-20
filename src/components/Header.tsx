@@ -170,7 +170,7 @@ export default function Header() {
                             <>
                                 {/* Notifications Button */}
                                 <Link
-                                    href="/notifications"
+                                    href="/dashboard/notifications"
                                     className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
                                 >
                                     <Bell className="h-5 w-5" />

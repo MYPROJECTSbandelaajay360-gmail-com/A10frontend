@@ -156,7 +156,7 @@ export default function Header() {
                                 {/* Menu Items */}
                                 <div className="py-2">
                                     <Link
-                                        href="/profile"
+                                        href="/dashboard/profile"
                                         className="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                         onClick={() => setShowProfile(false)}
                                     >
@@ -164,7 +164,7 @@ export default function Header() {
                                         Profile
                                     </Link>
                                     <Link
-                                        href="/settings"
+                                        href="/dashboard/settings"
                                         className="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                         onClick={() => setShowProfile(false)}
                                     >

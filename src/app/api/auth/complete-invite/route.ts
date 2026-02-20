@@ -20,8 +20,9 @@ export async function POST(request: Request) {
         }
 
         // 2. Call Backend to Activate User
+        const backendUrl = process.env.BACKEND_URL || process.env.API_URL || 'http://localhost:4000';
         try {
-            const backendResponse = await fetch('http://localhost:8001/api/auth/accept-invite', {
+            const backendResponse = await fetch(`${backendUrl}/api/auth/accept-invite`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, password }),

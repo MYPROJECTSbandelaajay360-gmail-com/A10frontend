@@ -238,7 +238,7 @@ export default function Sidebar() {
 
                 {/* Footer */}
                 <div className="sidebar-footer">
-                    <Link href="/notifications" className="sidebar-nav-item">
+                    <Link href="/dashboard/notifications" className="sidebar-nav-item">
                         <Bell className="w-[18px] h-[18px]" />
                         <span>Notifications</span>
                         <span className="sidebar-notification-badge">

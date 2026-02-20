@@ -54,8 +54,9 @@ export async function POST(request: NextRequest) {
     let user = null;
 
     // 1. Try Backend API (Source of Truth for Invited Users)
+    const backendUrl = process.env.BACKEND_URL || process.env.API_URL || 'http://localhost:4000';
     try {
-      const backendResponse = await fetch('http://localhost:8001/api/auth/login', {
+      const backendResponse = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

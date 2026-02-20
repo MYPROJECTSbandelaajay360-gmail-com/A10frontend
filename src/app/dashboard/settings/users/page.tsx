@@ -246,7 +246,7 @@ export default function UserManagementPage() {
 
                 <div className="flex items-center gap-3">
                     <Link
-                        href="/employees/add"
+                        href="/dashboard/employees/add"
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-400 to-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all"
                     >
                         <Plus className="w-5 h-5" />
@@ -383,7 +383,7 @@ export default function UserManagementPage() {
                                                     </>
                                                 ) : (
                                                     <Link
-                                                        href="/employees"
+                                                        href="/dashboard/employees"
                                                         className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                                         title="Go to Employee List to Invite"
                                                     >

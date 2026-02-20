@@ -163,7 +163,7 @@ export default function LeavePage() {
                     <p className="text-gray-500 mt-1">Track your leave balances and manage time-off requests</p>
                 </div>
                 <Link
-                    href="/leave/apply"
+                    href="/dashboard/leave/apply"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all text-sm group"
                 >
                     <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
@@ -356,7 +356,7 @@ export default function LeavePage() {
                                                 </p>
                                                 {filter === 'ALL' && (
                                                     <Link
-                                                        href="/leave/apply"
+                                                        href="/dashboard/leave/apply"
                                                         className="mt-6 px-6 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
                                                     >
                                                         Apply for Leave

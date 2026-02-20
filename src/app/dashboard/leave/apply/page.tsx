@@ -127,7 +127,7 @@ export default function ApplyLeavePage() {
             })
 
             if (res.ok) {
-                router.push('/leave')
+                router.push('/dashboard/leave')
                 router.refresh()
             } else {
                 const err = await res.json()
@@ -147,7 +147,7 @@ export default function ApplyLeavePage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <Link
-                        href="/leave"
+                        href="/dashboard/leave"
                         className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors mb-2"
                     >
                         <ArrowLeft className="w-4 h-4" />
@@ -347,7 +347,7 @@ export default function ApplyLeavePage() {
 
                                 <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row gap-4 items-center justify-between -mx-6 -mb-6 mt-6">
                                     <Link
-                                        href="/leave"
+                                        href="/dashboard/leave"
                                         className="w-full sm:w-auto px-6 py-2.5 text-slate-600 font-medium hover:text-slate-900 hover:bg-white rounded-lg transition-all text-center"
                                     >
                                         Cancel
