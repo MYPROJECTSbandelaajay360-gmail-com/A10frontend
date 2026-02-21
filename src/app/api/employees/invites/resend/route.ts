@@ -6,10 +6,10 @@ import crypto from 'crypto';
 // Email service configuration
 const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL || 'http://localhost:4007';
 const SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN || 'HRMSPortal_Secure_Token_2024_MinLength32Chars';
-const WEB_APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://musterbook.com';
+const WEB_APP_URL =  'https://musterbook.com';
 
 // POST - Resend employee invite email
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest) { 
     try {
         const { inviteId } = await request.json();
 
