@@ -14,7 +14,9 @@ import {
     Building2,
     Briefcase,
     ArrowRight,
-    Zap
+    Zap,
+    Mail,
+    Clock
 } from 'lucide-react'
 
 interface InviteDetails {
@@ -135,20 +137,60 @@ function AcceptInviteContent() {
     }
 
     if (error && !inviteDetails) {
+        const isExpired = error.toLowerCase().includes('expired');
+        const isUsed = error.toLowerCase().includes('already been used');
+        
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
                 <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full text-center border border-white/20">
-                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="w-8 h-8 text-red-400" />
+                    <div className={`w-16 h-16 ${isExpired ? 'bg-orange-500/20' : isUsed ? 'bg-blue-500/20' : 'bg-red-500/20'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                        {isExpired ? (
+                            <Clock className="w-8 h-8 text-orange-400" />
+                        ) : isUsed ? (
+                            <CheckCircle className="w-8 h-8 text-blue-400" />
+                        ) : (
+                            <AlertCircle className="w-8 h-8 text-red-400" />
+                        )}
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Invalid Invitation</h1>
-                    <p className="text-white/70 mb-6">{error}</p>
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
-                    >
-                        Go to Home
-                    </Link>
+                    <h1 className="text-2xl font-bold text-white mb-2">
+                        {isExpired ? 'Invitation Expired' : isUsed ? 'Already Registered' : 'Invalid Invitation'}
+                    </h1>
+                    <p className="text-white/70 mb-2">{error}</p>
+                    {!isUsed && (
+                        <p className="text-white/50 text-sm mb-6">
+                            Please contact your HR team to request a new invitation link.
+                        </p>
+                    )}
+                    {isUsed && (
+                        <p className="text-white/50 text-sm mb-6">
+                            Your account is already set up. Please sign in to continue.
+                        </p>
+                    )}
+                    <div className="flex flex-col gap-3">
+                        {isUsed ? (
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:opacity-90 transition-all font-semibold"
+                            >
+                                Sign In
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        ) : (
+                            <a
+                                href="mailto:hr@musterbook.com?subject=Re-send%20Invitation%20Link"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:opacity-90 transition-all font-semibold"
+                            >
+                                <Mail className="w-4 h-4" />
+                                Contact HR
+                            </a>
+                        )}
+                        <Link
+                            href="/"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+                        >
+                            Go to Home
+                        </Link>
+                    </div>
                 </div>
             </div>
         )
