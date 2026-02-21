@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Build invite link
-        const inviteLink = `${WEB_APP_URL}/employee-invite?token=${token}`;
+        const inviteLink = `https://musterbook.com/employee-invite?token=${token}`;
 
         // Call Email Service to send invitation email
         try {
