@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         await invite.save();
 
         // Build invite link
-        const inviteLink = `${WEB_APP_URL}/employee-invite?token=${newToken}`;
+        const inviteLink = `https://musterbook.com/employee-invite?token=${newToken}`;
 
         // Call Email Service to resend invitation email
         try {
