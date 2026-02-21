@@ -246,7 +246,7 @@ export default function Sidebar() {
                         </span>
                     </Link>
                     <button
-                        onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
+                        onClick={async () => { await signOut({ redirect: false }); window.location.href = '/login'; }}
                         className="sidebar-nav-item sidebar-logout w-full"
                     >
                         <LogOut className="w-[18px] h-[18px]" />
