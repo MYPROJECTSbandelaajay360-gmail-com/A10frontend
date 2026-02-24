@@ -1,8 +1,52 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
 import EmployeeInvite from '@/models/EmployeeInvite';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+
+// GET - Validate invitation token
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.nextUrl.searchParams.get('token');
+
+        if (!token) {
+            return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+        }
+
+        await connectDB();
+        const invite = await EmployeeInvite.findOne({ token });
+
+        if (!invite) {
+            return NextResponse.json({ error: 'Invalid or expired invitation link' }, { status: 404 });
+        }
+
+        if (invite.status !== 'pending') {
+            return NextResponse.json({
+                error: invite.status === 'accepted'
+                    ? 'This invitation has already been used'
+                    : 'This invitation is no longer valid'
+            }, { status: 400 });
+        }
+
+        if (new Date(invite.expiresAt) < new Date()) {
+            return NextResponse.json({ error: 'This invitation link has expired' }, { status: 400 });
+        }
+
+        return NextResponse.json({
+            invite: {
+                email: invite.email,
+                firstName: invite.firstName,
+                lastName: invite.lastName,
+                department: invite.department,
+                designation: invite.designation,
+                employeeId: invite.employeeId
+            }
+        });
+    } catch (error) {
+        console.error('Error validating invitation:', error);
+        return NextResponse.json({ error: 'Failed to validate invitation' }, { status: 500 });
+    }
+}
 
 export async function POST(request: Request) {
     try {
