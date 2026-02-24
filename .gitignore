@@ -10,11 +10,14 @@
 /.next/
 /out/
 /build
+.next/
+next-env.d.ts
 
 # Production
 /build
 
 # Misc
+package-lock.json
 
 
 # Logs
