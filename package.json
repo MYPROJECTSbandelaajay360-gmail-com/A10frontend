@@ -31,7 +31,6 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.22.0",
     "@react-spring/web": "^10.0.3",
-    "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@types/three": "^0.183.1",
     "bcrypt": "^6.0.0",
