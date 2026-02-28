@@ -2,20 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   Zap, ArrowRight, Clock, DollarSign, CalendarCheck, Shield, BarChart3,
   Users, Play, Menu, X, Star, Building2, Globe, Headphones, Mail, MapPin,
-  Phone, Check, Sparkles, TrendingUp, Lock, ChevronRight, Eye, Layers,
-  MousePointer2, Cpu, Award, ArrowUpRight
+  Phone, Check, Sparkles, TrendingUp, Lock, Layers,
+  Cpu, Award
 } from 'lucide-react'
-
-// Lazy load Three.js scene (heavy)
-const HeroScene = dynamic(() => import('./HeroScene'), {
-  ssr: false,
-  loading: () => <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900" />,
-})
+import HeroScene from './HeroScene'
 
 /* ═══════════════════════════════════════════════════════
    UTILITY COMPONENTS
@@ -55,22 +49,6 @@ function FadeIn({ children, className = '', delay = 0 }: { children: React.React
       className={className}
     >
       {children}
-    </motion.div>
-  )
-}
-
-function GlassCard({ children, className = '', hover = true }: { children: React.ReactNode; className?: string; hover?: boolean }) {
-  return (
-    <motion.div
-      whileHover={hover ? { y: -6, scale: 1.02 } : {}}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className={`relative bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden group ${className}`}
-    >
-      {/* Gradient border glow on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute inset-[-1px] rounded-2xl bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20" />
-      </div>
-      <div className="relative z-10">{children}</div>
     </motion.div>
   )
 }
@@ -339,65 +317,60 @@ export default function LandingPage() {
         </AnimatePresence>
       </motion.header>
 
-      {/* ═══ HERO SECTION — Three.js Background ═══ */}
-      <section id="home" className="relative min-h-screen flex items-center overflow-hidden bg-slate-950">
-        {/* Three.js Canvas */}
+      {/* ═══ HERO SECTION ═══ */}
+      <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
         <HeroScene />
 
-        {/* Gradient overlays for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-transparent to-slate-950/80 z-[1]" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent z-[2]" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 lg:py-0 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 lg:pt-40 lg:pb-28 w-full">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <motion.div style={{ opacity: heroOpacity, scale: heroScale }}>
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 mb-6">
-                <Sparkles className="w-4 h-4 text-blue-400" />
-                <span className="text-sm font-medium text-blue-200">#1 HR Platform for Modern Teams</span>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
+                className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 mb-6">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-xs font-semibold tracking-wide uppercase text-blue-300">#1 HR Platform for Modern Teams</span>
               </motion.div>
 
-              <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 }}
                 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
                 Simplify Your{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
                   Workforce
                 </span>
                 <br />Management
               </motion.h1>
 
-              <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
-                className="text-lg text-gray-300 leading-relaxed mb-8 max-w-lg">
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.35 }}
+                className="text-base sm:text-lg text-slate-400 leading-relaxed mb-8 max-w-lg">
                 All-in-one HR software to manage attendance, payroll, leave, and employee data effortlessly. Trusted by thousands of businesses.
               </motion.p>
 
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.5 }}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45 }}
                 className="flex flex-wrap gap-4">
                 <Link href="/register"
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-full text-sm transition-all shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5">
+                  className="group inline-flex items-center gap-2 px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-full text-sm transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 hover:-translate-y-0.5">
                   Get Started Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <button className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-full text-sm transition-all border border-white/20 backdrop-blur-sm hover:-translate-y-0.5">
+                <button className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/[0.06] hover:bg-white/[0.1] text-white font-medium rounded-full text-sm transition-all border border-white/[0.1] hover:-translate-y-0.5">
                   <Play className="w-4 h-4 text-blue-400 fill-blue-400" /> Watch Demo
                 </button>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.7 }}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.6 }}
                 className="mt-10 flex items-center gap-3">
                 <div className="flex -space-x-2">
                   {['from-blue-400 to-blue-600', 'from-purple-400 to-purple-600', 'from-green-400 to-green-600', 'from-orange-400 to-orange-600'].map((g, i) => (
-                    <div key={i} className={`w-8 h-8 rounded-full bg-gradient-to-br ${g} border-2 border-slate-950 flex items-center justify-center text-white text-[10px] font-bold`}>
+                    <div key={i} className={`w-8 h-8 rounded-full bg-gradient-to-br ${g} border-2 border-[#0f172a] flex items-center justify-center text-white text-[10px] font-bold`}>
                       {['AV', 'MS', 'RK', 'PS'][i]}
                     </div>
                   ))}
                 </div>
-                <div className="text-sm text-gray-400"><span className="font-semibold text-white">5,000+</span> businesses trust us</div>
+                <div className="text-sm text-slate-500"><span className="font-semibold text-slate-300">5,000+</span> businesses trust us</div>
               </motion.div>
             </motion.div>
 
             {/* Dashboard Mockup */}
-            <motion.div initial={{ opacity: 0, x: 60, rotateY: -5 }} animate={{ opacity: 1, x: 0, rotateY: 0 }}
-              transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }} className="relative lg:ml-8 hidden lg:block">
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.35, ease: [0.22, 1, 0.36, 1] }} className="relative lg:ml-8 hidden lg:block">
               <DashboardMockup />
             </motion.div>
           </div>
