@@ -25,14 +25,15 @@ import {
     Menu,
     X,
     Zap,
-    Megaphone
+    Megaphone,
+    CreditCard
 } from 'lucide-react'
 import { useState } from 'react'
 
 interface NavItem {
     name: string
     href: string
-    icon: React.ElementType
+    icon: React.ComponentType<{ className?: string }>
     roles?: string[]
     children?: NavItem[]
 }
@@ -116,6 +117,12 @@ const navigation: NavItem[] = [
             { name: 'Leave Types', href: '/dashboard/settings/leave-types', icon: CalendarDays },
             { name: 'Shifts', href: '/dashboard/settings/shifts', icon: Clock },
         ]
+    },
+    {
+        name: 'Subscription',
+        href: '/dashboard/subscription',
+        icon: CreditCard,
+        roles: ['ADMIN'],
     },
 ]
 

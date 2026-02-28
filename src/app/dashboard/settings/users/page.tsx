@@ -44,7 +44,7 @@ interface User {
 interface StatCardProps {
     title: string;
     value: number;
-    icon: React.ElementType;
+    icon: React.ComponentType<{ className?: string }>;
     color: string;
 }
 

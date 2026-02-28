@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
                 try {
                     const user = await prisma.user.findUnique({
                         where: { email: credentials.email.toLowerCase() },
-                        include: { employee: true }
+                        include: { employee: true, organization: true }
                     })
 
                     if (!user) {
@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
                         name: name,
                         employeeId: user.employee?.id,
                         image: user.employee?.profileImage,
+                        organizationId: user.organizationId || null,
                     }
                 } catch (error: any) {
                     console.error('Login error:', error)
@@ -71,6 +72,7 @@ export const authOptions: NextAuthOptions = {
                 token.role = user.role
                 token.employeeId = user.employeeId
                 token.picture = user.image
+                token.organizationId = (user as any).organizationId || null
             }
 
             // Always update/refresh the access token to prevent expiration (Sliding Window)
@@ -85,7 +87,8 @@ export const authOptions: NextAuthOptions = {
                         id: token.id,
                         email: token.email,
                         role: token.role,
-                        employeeId: token.employeeId
+                        employeeId: token.employeeId,
+                        organizationId: token.organizationId || null
                     },
                     secret,
                     { expiresIn: '24h' }
@@ -109,7 +112,8 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = token.role as string
                 session.user.employeeId = token.employeeId as string | undefined
                 session.user.image = token.picture as string | undefined
-                (session as any).accessToken = token.accessToken // Add access token to session
+                ;(session.user as any).organizationId = token.organizationId as string | null
+                ;(session as any).accessToken = token.accessToken // Add access token to session
             }
             return session
         }
